@@ -128,7 +128,6 @@ S.UI = (function () {
     time = null;
     document.body.classList.remove('text-focus');
     document.body.classList.remove('text-vertical');
-    window.mobileTextVertical = false;
     destroy && S.Shape.switchShape(S.ShapeBuilder.letter(''));
   }
   function setTextFocus(enabled) {
@@ -142,7 +141,6 @@ S.UI = (function () {
     sequence = (typeof(value) === 'object' ? value : value.split('|')).filter(function (item) {
       return item !== '';
     });
-    window.mobileTextVertical = false;
 
     function next() {
       var current = sequence.shift(),
@@ -206,15 +204,7 @@ S.UI = (function () {
           setTextFocus(true);
           document.body.classList.remove('story-portrait');
           document.body.classList.remove('story-cake');
-          var displayText = current[0] === cmd ? 'What?' : current,
-              displayLength = Array.from(String(displayText)).length,
-              displayIsNumber = !isNaN(parseFloat(displayText)) && isFinite(displayText);
-          if (window.innerWidth < 600 && !displayIsNumber && displayLength >= 5) {
-            window.mobileTextVertical = !window.mobileTextVertical;
-          } else {
-            window.mobileTextVertical = false;
-          }
-          S.Shape.switchShape(S.ShapeBuilder.letter(displayText), false, window.innerWidth < 600);
+          S.Shape.switchShape(S.ShapeBuilder.letter(current[0] === cmd ? 'What?' : current), false, window.innerWidth < 600);
           if (!window.birthdayMusicStarted && current.indexOf('小楠老师') !== -1) {
             window.birthdayMusicStarted = true;
             window.dispatchEvent(new Event('birthday:music'));
@@ -673,7 +663,7 @@ S.ShapeBuilder = (function () {
     },
     letter: function (l, sampleGap) {
       var mobileChars = Array.from(String(l)),
-          mobileVertical = window.innerWidth < 600 && !isNumber(l) && mobileChars.length >= 5 && window.mobileTextVertical === true;
+          mobileVertical = window.innerWidth < 600 && !isNumber(l) && mobileChars.length >= 6;
       if (mobileVertical) document.body.classList.add('text-vertical');
       else document.body.classList.remove('text-vertical');
       var s = 0;
