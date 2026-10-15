@@ -126,7 +126,16 @@ S.UI = (function () {
     clearTimeout(interval);
     sequence = [];
     time = null;
+    document.body.classList.remove('text-focus');
+    document.body.classList.remove('text-vertical');
     destroy && S.Shape.switchShape(S.ShapeBuilder.letter(''));
+  }
+  function setTextFocus(enabled) {
+    if (window.innerWidth < 600 && enabled) document.body.classList.add('text-focus');
+    else {
+      document.body.classList.remove('text-focus');
+      document.body.classList.remove('text-vertical');
+    }
   }
   function performAction(value) {
     sequence = (typeof(value) === 'object' ? value : value.split('|')).filter(function (item) {
@@ -148,6 +157,7 @@ S.UI = (function () {
 
       switch (action) {
         case 'countdown':
+          setTextFocus(true);
           var count = parseInt(actionValue, 10) || 3;
           function countdown() {
             if (count <= 0) {
@@ -161,34 +171,40 @@ S.UI = (function () {
           countdown();
           return;
         case 'rectangle':
+          setTextFocus(false);
           actionValue = actionValue && actionValue.split('x');
           actionValue = (actionValue && actionValue.length === 2) ? actionValue : [maxShapeSize, maxShapeSize / 2];
           S.Shape.switchShape(S.ShapeBuilder.rectangle(Math.min(maxShapeSize, parseInt(actionValue[0], 10)), Math.min(maxShapeSize, parseInt(actionValue[1], 10))));
           break;
         case 'circle':
+          setTextFocus(false);
           actionValue = parseInt(actionValue, 10) || maxShapeSize;
           actionValue = Math.min(actionValue, maxShapeSize);
           S.Shape.switchShape(S.ShapeBuilder.circle(actionValue));
           break;
         case 'time':
+          setTextFocus(true);
           var t = formatTime(new Date());
           time = t;
           S.Shape.switchShape(S.ShapeBuilder.letter(time));
           break;
         case 'cake':
+          setTextFocus(false);
           document.body.classList.remove('story-portrait');
           document.body.classList.add('story-cake');
           S.Shape.switchShape(S.ShapeBuilder.cake(), true);
           break;
         case 'portrait':
+          setTextFocus(false);
           document.body.classList.remove('story-cake');
           document.body.classList.add('story-portrait');
           S.Shape.switchShape(S.ShapeBuilder.portrait(), true);
           break;
         default:
+          setTextFocus(true);
           document.body.classList.remove('story-portrait');
           document.body.classList.remove('story-cake');
-          S.Shape.switchShape(S.ShapeBuilder.letter(current[0] === cmd ? 'What?' : current));
+          S.Shape.switchShape(S.ShapeBuilder.letter(current[0] === cmd ? 'What?' : current), false, window.innerWidth < 600);
           if (!window.birthdayMusicStarted && current.indexOf('小楠老师') !== -1) {
             window.birthdayMusicStarted = true;
             window.dispatchEvent(new Event('birthday:music'));
@@ -646,13 +662,28 @@ S.ShapeBuilder = (function () {
       return processCanvas();
     },
     letter: function (l, sampleGap) {
+      var mobileChars = Array.from(String(l)),
+          mobileVertical = window.innerWidth < 600 && !isNumber(l) && mobileChars.length >= 6;
+      if (mobileVertical) document.body.classList.add('text-vertical');
+      else document.body.classList.remove('text-vertical');
       var s = 0;
       setFontSize(fontSize);
       s = Math.min(fontSize,
                   (shapeCanvas.width / shapeContext.measureText(l).width) * 0.8 * fontSize,
                   (shapeCanvas.height / fontSize) * (isNumber(l) ? 1 : 0.45) * fontSize);
-      setFontSize(s);
       shapeContext.clearRect(0, 0, shapeCanvas.width, shapeCanvas.height);
+      if (mobileVertical) {
+        // 手机竖屏中，较长中文改为逐字竖排，避免横向挤成一团。
+        var verticalSize = Math.min(112, shapeCanvas.width * .28, shapeCanvas.height / (mobileChars.length * 1.18)),
+            verticalLine = verticalSize * 1.12,
+            verticalTop = shapeCanvas.height / 2 - (verticalLine * mobileChars.length) / 2 + verticalLine / 2;
+        setFontSize(verticalSize);
+        for (var mobileIndex = 0; mobileIndex < mobileChars.length; mobileIndex++) {
+          shapeContext.fillText(mobileChars[mobileIndex], shapeCanvas.width / 2, verticalTop + mobileIndex * verticalLine);
+        }
+        return processCanvas(sampleGap || Math.max(4, gap - 1));
+      }
+      setFontSize(s);
       shapeContext.fillText(l, shapeCanvas.width / 2, shapeCanvas.height / 2);
       return processCanvas(sampleGap);
     },
