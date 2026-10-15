@@ -3,7 +3,7 @@
 
 <head>
 	<meta charset="utf-8">
-	<title>不管几岁，快乐万岁</title>
+	<title>小楠老师，生日快乐</title>
 	<meta name="language" content="zh-CN">
     <!-- 新增手机适配viewport -->
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -484,6 +484,9 @@
 		}
 
 		@media (max-width: 600px) {
+			/* 手机端让文字粒子成为主视觉，压低背景网格和烟花的干扰。 */
+			body.story-playing #canvas { opacity: .46; }
+			body.story-finished #canvas { opacity: .58; }
 			.start-screen { padding: 18px; }
 			.blind-box { transform: scale(.9); margin-bottom: 18px; }
 			.start-title { font-size: clamp(27px, 9vw, 36px); }
