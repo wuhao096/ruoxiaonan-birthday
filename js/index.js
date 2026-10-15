@@ -90,7 +90,10 @@ S.Drawing = (function () {
     drawCircle: function (p, c) {
       context.fillStyle = c.render();
       context.beginPath();
-      context.arc(p.x, p.y, Math.max(.82, Math.min(3.2, p.z * .78)), 0, 2 * Math.PI, true);
+      var mobileRadius = window.innerWidth < 600;
+      context.arc(p.x, p.y, mobileRadius
+        ? Math.max(1.05, Math.min(3.65, p.z * .9))
+        : Math.max(.82, Math.min(3.2, p.z * .78)), 0, 2 * Math.PI, true);
       context.closePath();
       context.fill();
     }
@@ -194,7 +197,8 @@ S.UI = (function () {
 
       var isCakeFrame = current === '#cake',
           isPortraitFrame = current === '#portrait';
-      interval = setTimeout(next, sequence.length > 0 ? (isPortraitFrame ? 5200 : 3200) : (isCakeFrame ? 6000 : 3400));
+      var mobilePause = window.innerWidth < 600 ? 4200 : 3200;
+      interval = setTimeout(next, sequence.length > 0 ? (isPortraitFrame ? (window.innerWidth < 600 ? 6000 : 5200) : mobilePause) : (isCakeFrame ? 6000 : (window.innerWidth < 600 ? 4300 : 3400)));
     }
 
     clearTimeout(interval);
@@ -373,7 +377,7 @@ S.Dot.prototype = {
   }
 }
 S.ShapeBuilder = (function () {
-  var gap = window.innerWidth < 600 ? 7 : 8,
+  var gap = window.innerWidth < 600 ? 6 : 8,
       shapeCanvas = document.createElement('canvas'),
       shapeContext = shapeCanvas.getContext('2d'),
       fontSize = 500,
