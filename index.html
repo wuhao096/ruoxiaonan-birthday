@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="zh-CN">
-
 <head>
 	<meta charset="utf-8">
 	<title>不管几岁，快乐万岁</title>
@@ -11,11 +10,9 @@
 		:root {
 			color-scheme: dark;
 		}
-
 		* {
 			box-sizing: border-box;
 		}
-
 		html,
 		body {
 			margin: 0px;
@@ -27,23 +24,18 @@
 				linear-gradient(180deg, #050208 0%, #000 72%);
 			font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
 		}
-
 		.overlay {
 			display: none;
 		}
-
 		#canvas {
 			transition: opacity .9s ease;
 		}
-
 		body.story-playing #canvas {
 			opacity: .78;
 		}
-
 		body.story-finished #canvas {
 			opacity: .82;
 		}
-
 		.start-screen {
 			position: fixed;
 			inset: 0;
@@ -56,18 +48,15 @@
 			backdrop-filter: blur(5px);
 			transition: opacity .7s ease, visibility .7s ease;
 		}
-
 		.start-screen.is-hidden {
 			opacity: 0;
 			visibility: hidden;
 		}
-
 		.start-content {
 			width: min(92vw, 430px);
 			text-align: center;
 			animation: startIn 1s ease both;
 		}
-
 		.start-kicker,
 		.final-kicker {
 			margin: 0 0 10px;
@@ -77,7 +66,6 @@
 			letter-spacing: .24em;
 			text-transform: uppercase;
 		}
-
 		.blind-box {
 			position: relative;
 			width: 126px;
@@ -86,7 +74,6 @@
 			filter: drop-shadow(0 18px 28px rgba(214, 78, 139, .28));
 			animation: boxFloat 2.6s ease-in-out infinite;
 		}
-
 		.box-glow {
 			position: absolute;
 			left: 50%;
@@ -98,7 +85,6 @@
 			transform: translateX(-50%);
 			transition: transform .7s ease, opacity .7s ease;
 		}
-
 		.box-body,
 		.box-lid {
 			position: absolute;
@@ -107,7 +93,6 @@
 			background: linear-gradient(135deg, #f273a2 0%, #c759a4 56%, #8754a8 100%);
 			transform: translateX(-50%);
 		}
-
 		.box-body {
 			bottom: 4px;
 			width: 100px;
@@ -115,7 +100,6 @@
 			border-radius: 5px 5px 16px 16px;
 			box-shadow: inset 0 -12px 20px rgba(69, 26, 85, .18);
 		}
-
 		.box-lid {
 			top: 27px;
 			z-index: 2;
@@ -125,7 +109,6 @@
 			transform-origin: 82% 90%;
 			transition: transform .75s cubic-bezier(.2, .86, .24, 1.25);
 		}
-
 		.box-ribbon-v,
 		.box-ribbon-h {
 			position: absolute;
@@ -134,7 +117,6 @@
 			background: linear-gradient(90deg, #ffe9ac, #ffd26f 46%, #fff0bb);
 			box-shadow: 0 0 10px rgba(255, 221, 132, .34);
 		}
-
 		.box-ribbon-v {
 			top: 0;
 			left: 50%;
@@ -142,7 +124,6 @@
 			height: 100%;
 			transform: translateX(-50%);
 		}
-
 		.box-ribbon-h {
 			top: 50%;
 			left: 0;
@@ -150,7 +131,6 @@
 			height: 13px;
 			transform: translateY(-50%);
 		}
-
 		.box-bow {
 			position: absolute;
 			left: 50%;
@@ -160,7 +140,6 @@
 			height: 28px;
 			transform: translateX(-50%);
 		}
-
 		.box-bow::before,
 		.box-bow::after {
 			content: "";
@@ -171,10 +150,8 @@
 			border: 6px solid #ffdf83;
 			border-radius: 70% 45% 70% 45%;
 		}
-
 		.box-bow::before { right: 22px; transform: rotate(18deg); }
 		.box-bow::after { left: 22px; transform: scaleX(-1) rotate(18deg); }
-
 		.box-spark {
 			position: absolute;
 			left: 50%;
@@ -187,7 +164,6 @@
 			box-shadow: 0 0 12px #ffd87c;
 			opacity: 0;
 		}
-
 		.start-screen.is-opening .blind-box { animation: boxOpenPulse .78s ease both; }
 		.start-screen.is-opening .box-lid { transform: translate(-40%, -42px) rotate(24deg); }
 		.start-screen.is-opening .box-glow { opacity: 1; transform: translateX(-50%) scale(1.8); }
@@ -196,7 +172,6 @@
 		.start-screen.is-opening .box-spark:nth-of-type(2) { --sx: 52px; --sy: -44px; animation-delay: .05s; }
 		.start-screen.is-opening .box-spark:nth-of-type(3) { --sx: -72px; --sy: -8px; animation-delay: .1s; }
 		.start-screen.is-opening .box-spark:nth-of-type(4) { --sx: 68px; --sy: -4px; animation-delay: .14s; }
-
 		.start-title {
 			margin: 0 0 10px;
 			font-family: "STKaiti", "KaiTi", "Microsoft YaHei", sans-serif;
@@ -205,14 +180,12 @@
 			letter-spacing: .08em;
 			text-shadow: 0 0 24px rgba(255, 191, 215, .28);
 		}
-
 		.start-note {
 			margin: 0 0 26px;
 			color: rgba(255, 255, 255, .65);
 			font-size: 14px;
 			letter-spacing: .04em;
 		}
-
 		.start-button {
 			min-width: 172px;
 			padding: 13px 28px;
@@ -226,13 +199,11 @@
 			cursor: pointer;
 			transition: transform .2s ease, box-shadow .2s ease;
 		}
-
 		.start-button:hover,
 		.start-button:focus-visible {
 			transform: translateY(-2px);
 			box-shadow: 0 16px 42px rgba(214, 78, 139, .4);
 		}
-
 		.music-button {
 			position: fixed;
 			top: max(16px, env(safe-area-inset-top));
@@ -250,15 +221,12 @@
 			font-size: 20px;
 			cursor: pointer;
 		}
-
 		.music-button.is-visible {
 			display: block;
 		}
-
 		.music-button.is-playing {
 			animation: musicPulse 1.4s ease-in-out infinite;
 		}
-
 		.final-scene {
 			position: fixed;
 			inset: 0;
@@ -276,7 +244,6 @@
 			pointer-events: none;
 			transition: opacity 1.2s ease, visibility 1.2s ease;
 		}
-
 		.final-scene::before {
 			content: "";
 			position: absolute;
@@ -287,19 +254,16 @@
 			pointer-events: none;
 			animation: warmBreathe 5.5s ease-in-out infinite;
 		}
-
 		.final-scene.is-visible {
 			opacity: 1;
 			visibility: visible;
 		}
-
 		.final-content {
 			position: relative;
 			z-index: 2;
 			width: min(92vw, 720px);
 			text-align: center;
 		}
-
 		.final-title {
 			margin: 0 auto 12px;
 			font-family: "STKaiti", "KaiTi", "Microsoft YaHei", sans-serif;
@@ -314,48 +278,42 @@
 			-webkit-text-fill-color: transparent;
 			text-shadow: 0 0 28px rgba(255, 185, 211, .25);
 		}
-
 		.final-copy {
 			max-width: 620px;
 			margin: 0 auto;
-			color: rgba(255, 244, 248, .76);
+			color: rgba(255, 248, 252, .90);          /* 提亮，提高可读性 */
 			font-size: clamp(13px, 2.8vw, 16px);
 			line-height: 1.9;
 			letter-spacing: .04em;
+			text-shadow: 0 1px 8px rgba(0, 0, 0, .38); /* 增加阴影，手机更清晰 */
 		}
-
 		.mobile-break { display: none; }
-
 		.final-signature {
 			margin: 10px 0 0;
-			color: #ffe5ef;
-			text-shadow: 0 0 16px rgba(255, 166, 205, .38);
+			color: #ffeaf2;                            /* 更亮 */
+			text-shadow: 0 0 18px rgba(255, 166, 205, .5), 0 1px 4px rgba(0,0,0,.4);
 			font-family: "STKaiti", "KaiTi", serif;
 			font-size: clamp(18px, 4vw, 24px);
 			letter-spacing: .12em;
 		}
-
 		.final-message {
 			position: relative;
 			padding: 16px 22px 14px;
 		}
-
 		.final-message::before {
 			content: "";
 			position: absolute;
 			inset: 0;
 			z-index: -1;
-			border: 1px solid rgba(255, 210, 228, .12);
+			border: 1px solid rgba(255, 210, 228, .18);
 			border-radius: 24px;
-			background: linear-gradient(135deg, rgba(255, 181, 211, .08), rgba(255, 224, 173, .025));
+			background: linear-gradient(135deg, rgba(255, 181, 211, .13), rgba(255, 224, 173, .06)); /* 稍微提高不透明度 */
 			box-shadow: 0 18px 60px rgba(91, 22, 73, .16), inset 0 1px 0 rgba(255, 255, 255, .08);
 			backdrop-filter: blur(3px);
 		}
-
 		.flower-bouquet {
 			display: none;
 		}
-
 		.flower-particle-canvas {
 			display: block;
 			width: min(88vw, 590px);
@@ -366,22 +324,18 @@
 			transform: translateY(34px) scale(.9);
 			opacity: 0;
 		}
-
 		.final-scene.is-visible .flower-particle-canvas {
 			animation: bouquetIn 1.25s .15s cubic-bezier(.2, .78, .26, 1.12) forwards;
 		}
-
 		.final-scene.is-visible .final-message {
 			animation: messageIn 1s .65s ease both;
 		}
-
 		.warm-particles,
 		.petal-layer {
 			position: absolute;
 			inset: 0;
 			overflow: hidden;
 		}
-
 		.warm-particle,
 		.falling-petal {
 			position: absolute;
@@ -389,7 +343,6 @@
 			bottom: -24px;
 			will-change: transform, opacity;
 		}
-
 		.warm-particle {
 			width: var(--size);
 			height: var(--size);
@@ -398,7 +351,6 @@
 			box-shadow: 0 0 12px rgba(255, 187, 129, .75);
 			animation: warmFloat var(--duration) var(--delay) ease-in-out infinite;
 		}
-
 		.falling-petal {
 			width: var(--size);
 			height: calc(var(--size) * .62);
@@ -407,15 +359,12 @@
 			box-shadow: 0 0 8px rgba(255, 111, 159, .3);
 			animation: petalDrift var(--duration) var(--delay) linear infinite;
 		}
-
 		.canvas {
 			transition: opacity 1.1s ease;
 		}
-
 		.canvas.final-mode {
 			opacity: .12;
 		}
-
 		.butterfly-particle-canvas {
 			position: fixed;
 			inset: 0;
@@ -426,63 +375,51 @@
 			opacity: 0;
 			transition: opacity .55s ease;
 		}
-
 		body.story-cake .butterfly-particle-canvas {
 			opacity: 1;
 		}
-
 		@keyframes startIn {
 			from { opacity: 0; transform: translateY(16px); }
 			to { opacity: 1; transform: translateY(0); }
 		}
-
 		@keyframes boxFloat {
 			50% { transform: translateY(-7px) rotate(1deg); }
 		}
-
 		@keyframes boxOpenPulse {
 			45% { transform: translateY(5px) scale(.96); }
 			100% { transform: translateY(-5px) scale(1.04); }
 		}
-
 		@keyframes boxSpark {
 			0% { opacity: 0; transform: translate(-50%, 0) scale(.3); }
 			32% { opacity: 1; }
 			100% { opacity: 0; transform: translate(calc(-50% + var(--sx)), var(--sy)) scale(1.1); }
 		}
-
 		@keyframes bouquetIn {
 			to { opacity: 1; transform: translateY(0) scale(1); }
 		}
-
 		@keyframes messageIn {
 			from { opacity: 0; transform: translateY(15px); }
 			to { opacity: 1; transform: translateY(0); }
 		}
-
 		@keyframes warmBreathe {
 			0%, 100% { opacity: .55; transform: scale(.96); }
 			50% { opacity: .9; transform: scale(1.04); }
 		}
-
 		@keyframes warmFloat {
 			0% { opacity: 0; transform: translate3d(0, 0, 0) scale(.55); }
 			18% { opacity: .85; }
 			70% { opacity: .5; }
 			100% { opacity: 0; transform: translate3d(var(--drift), -105vh, 0) scale(1.25); }
 		}
-
 		@keyframes petalDrift {
 			0% { opacity: 0; transform: translate3d(0, -8vh, 0) rotate(0deg); }
 			12% { opacity: .72; }
 			85% { opacity: .55; }
 			100% { opacity: 0; transform: translate3d(var(--drift), -112vh, 0) rotate(520deg); }
 		}
-
 		@keyframes musicPulse {
 			50% { color: #ffc6dd; transform: scale(1.06); }
 		}
-
 		@media (max-width: 600px) {
 			/* 手机端让文字粒子成为主视觉，压低背景网格和烟花的干扰。 */
 			body.story-playing #canvas { opacity: .46; }
@@ -491,14 +428,25 @@
 			.blind-box { transform: scale(.9); margin-bottom: 18px; }
 			.start-title { font-size: clamp(27px, 9vw, 36px); }
 			.final-content { width: 94vw; }
-			.final-kicker { margin-bottom: 7px; font-size: 9px; }
-			.final-title { margin-bottom: 8px; }
-			.final-copy { max-width: 92vw; line-height: 1.75; }
+			.final-kicker { margin-bottom: 7px; font-size: 10px; letter-spacing: .18em; }
+			.final-title {
+				margin-bottom: 8px;
+				font-size: clamp(24px, 7.2vw, 36px);
+				line-height: 1.35;
+			}
+			.final-copy {
+				max-width: 92vw;
+				font-size: clamp(14px, 3.6vw, 16px);
+				line-height: 1.85;
+				letter-spacing: .03em;
+			}
+			.final-signature {
+				font-size: clamp(17px, 4.5vw, 22px);
+			}
 			.final-message { padding: 12px 8px 10px; }
 			.mobile-break { display: initial; }
 			.flower-particle-canvas { width: min(96vw, 510px); margin-top: 2px; }
 		}
-
 		@media (prefers-reduced-motion: reduce) {
 			*, *::before, *::after {
 				animation-duration: .01ms !important;
@@ -508,8 +456,6 @@
 		}
 	</style>
 </head>
-
-
 <body>
 	<canvas id="canvas" style="position:absolute;width:100%;height:100%;z-index:8888"></canvas>
 	<canvas style="position:absolute;width:100%;height:100%;z-index:9999" class="canvas"></canvas>
@@ -608,7 +554,6 @@
 		<div class="tabs">
 			<div class="tabs-labels"><span class="tabs-label">Commands</span><span class="tabs-label">Info</span><span
 					class="tabs-label">Share</span></div>
-
 			<div class="tabs-panels">
 				<ul class="tabs-panel commands">
 				</ul>
@@ -617,7 +562,6 @@
 	</div>
 	<script>
 		function initVars() {
-
 			pi = Math.PI;
 			ctx = canvas.getContext("2d");
 			canvas.width = canvas.clientWidth;
@@ -690,9 +634,7 @@
 			}
 			frames = 0;
 		}
-
 		function rasterizePoint(x, y, z) {
-
 			var p, d;
 			x -= playerX;
 			y -= playerY;
@@ -724,9 +666,7 @@
 				};
 			}
 		}
-
 		function spawnSeed() {
-
 			seed = new Object();
 			seed.x = -50 + Math.random() * 100;
 			seed.y = 25;
@@ -737,9 +677,7 @@
 			seed.born = frames;
 			seeds.push(seed);
 		}
-
 		function splode(x, y, z) {
-
 			t = canvas.width < 600 ? 18 + parseInt(Math.random() * 22) : 28 + parseInt(Math.random() * 36);
 			sparkV = 1.2 + Math.random() * 2.1;
 			explosionColor = sparkColors[parseInt(Math.random() * sparkColors.length)];
@@ -759,7 +697,6 @@
 				sparks.push(spark);
 			}
 		}
-
 		function spawnMeteor() {
 			var startX = canvas.width * (.58 + Math.random() * .38);
 			meteors.push({
@@ -773,7 +710,6 @@
 				trail: []
 			});
 		}
-
 		function doLogic() {
 			var finalStage = document.body.classList.contains("story-finished"),
 				portraitStage = document.body.classList.contains("story-portrait"),
@@ -801,7 +737,6 @@
 				meteors[i].life++;
 				if (meteors[i].life > meteors[i].maxLife) meteors.splice(i, 1);
 			}
-
 			if (seedTimer < frames) {
 				seedTimer = frames + seedInterval * Math.random() * 10;
 				spawnSeed();
@@ -855,17 +790,13 @@
 			playerZ = Math.cos(p + t) * d;
 			yaw = pi + p + t;
 		}
-
 		function rgb(col) {
-
 			var r = parseInt((.5 + Math.sin(col) * .5) * 16);
 			var g = parseInt((.5 + Math.cos(col) * .5) * 16);
 			var b = parseInt((.5 - Math.sin(col) * .5) * 16);
 			return "#" + r.toString(16) + g.toString(16) + b.toString(16);
 		}
-
 		function draw() {
-
 			ctx.clearRect(0, 0, cx * 2, cy * 2);
 			// 盲盒首页保持神秘，拆开后才出现月亮与星空。
 			if (document.body.classList.contains("story-playing") || document.body.classList.contains("story-finished")) {
@@ -941,7 +872,6 @@
 				ctx.shadowBlur = 0;
 				ctx.restore();
 			}
-
 			// 流星只保留很少几颗，尾巴短而亮，避免遮挡文字。
 			for (i = 0; i < meteors.length; i++) {
 				var meteor = meteors[i];
@@ -963,7 +893,6 @@
 				ctx.fill();
 			}
 			ctx.globalAlpha = 1;
-
 			ctx.fillStyle = "#ff8";
 			var finalGrid = document.body.classList.contains("story-finished"),
 				drawGridXStep = finalGrid ? (isMobileCanvas ? 10 : 6) : gridXStep,
@@ -1027,9 +956,7 @@
 				}
 			}
 		}
-
 		function frame(timestamp) {
-
 			requestAnimationFrame(frame);
 			if (document.body.classList.contains("story-portrait")) {
 				ctx.clearRect(0, 0, cx * 2, cy * 2);
@@ -1040,7 +967,6 @@
 				: frameInterval;
 			if (activeFrameInterval && timestamp - lastFrameTime < activeFrameInterval) return;
 			lastFrameTime = timestamp;
-
 			if (frames > 100000) {
 				seedTimer = 0;
 				frames = 0;
@@ -1049,7 +975,6 @@
 			draw();
 			doLogic();
 		}
-
 		window.addEventListener("resize", () => {
 			canvas.width = canvas.clientWidth;
 			canvas.height = canvas.clientHeight;
@@ -1062,7 +987,6 @@
 			gridZStep = isMobileCanvas ? 7 : 4;
 			frameInterval = isMobileCanvas ? 1000 / 30 : 1000 / 45;
 		});
-
 		initVars();
 		requestAnimationFrame(frame);
 	</script>
@@ -1076,16 +1000,13 @@
 			var warmParticles = document.getElementById('warm-particles');
 			var petalLayer = document.getElementById('petal-layer');
 			var started = false;
-
 			bgm.volume = .42;
-
 			function updateMusicButton() {
 				var playing = !bgm.paused;
 				musicButton.classList.toggle('is-playing', playing);
 				musicButton.textContent = playing ? '♪' : '♫';
 				musicButton.setAttribute('aria-label', playing ? '暂停背景音乐' : '播放背景音乐');
 			}
-
 			function addAmbientParticles(container, className, count, sizeMin, sizeMax) {
 				var fragment = document.createDocumentFragment();
 				for (var i = 0; i < count; i++) {
@@ -1101,12 +1022,10 @@
 				}
 				container.appendChild(fragment);
 			}
-
 			function revealFinalScene() {
 				var mobile = window.matchMedia('(max-width: 600px)').matches;
 				var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 				var shapeCanvas = document.querySelector('.canvas');
-
 				document.body.classList.remove('story-portrait');
 				document.body.classList.remove('story-cake');
 				window.finalSceneStartedAt = Date.now();
@@ -1121,7 +1040,6 @@
 				finalScene.setAttribute('aria-hidden', 'false');
 				if (window.startFlowerParticles) window.startFlowerParticles();
 			}
-
 			startButton.addEventListener('click', function () {
 				if (started) return;
 				started = true;
@@ -1139,7 +1057,6 @@
 					window.setTimeout(function () { startScreen.hidden = true; }, 760);
 				}, 720);
 			});
-
 			musicButton.addEventListener('click', function () {
 				if (bgm.paused) {
 					bgm.play().then(updateMusicButton).catch(updateMusicButton);
@@ -1148,7 +1065,6 @@
 					updateMusicButton();
 				}
 			});
-
 			bgm.addEventListener('play', updateMusicButton);
 			bgm.addEventListener('pause', updateMusicButton);
 			window.addEventListener('birthday:music', function () {
@@ -1163,7 +1079,5 @@
 	<script src="js/flower-particles.js"></script>
 	<script src="js/butterfly-particles.js"></script>
 	<script src="js/index.js"></script>
-
 </body>
-
 </html>
