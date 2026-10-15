@@ -1,559 +1,32 @@
 <!doctype html>
-<html lang="zh-CN">
+<html>
+
 <head>
 	<meta charset="utf-8">
-	<title>不管几岁，快乐万岁</title>
+	<title>生日快乐</title>
 	<meta name="language" content="zh-CN">
-    <!-- 新增手机适配viewport -->
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
 	<style>
-		:root {
-			color-scheme: dark;
-		}
-		* {
-			box-sizing: border-box;
-		}
 		html,
 		body {
 			margin: 0px;
 			width: 100%;
 			height: 100%;
 			overflow: hidden;
-			background:
-				radial-gradient(circle at 50% 35%, rgba(74, 28, 88, .26), transparent 44%),
-				linear-gradient(180deg, #050208 0%, #000 72%);
-			font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
-		}
-		.overlay {
-			display: none;
-		}
-		#canvas {
-			transition: opacity .9s ease;
-		}
-		body.story-playing #canvas {
-			opacity: .78;
-		}
-		body.story-finished #canvas {
-			opacity: .82;
-		}
-		.start-screen {
-			position: fixed;
-			inset: 0;
-			z-index: 10001;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			padding: 24px;
-			background: rgba(0, 0, 0, .62);
-			backdrop-filter: blur(5px);
-			transition: opacity .7s ease, visibility .7s ease;
-		}
-		.start-screen.is-hidden {
-			opacity: 0;
-			visibility: hidden;
-		}
-		.start-content {
-			width: min(92vw, 430px);
-			text-align: center;
-			animation: startIn 1s ease both;
-		}
-		.start-kicker,
-		.final-kicker {
-			margin: 0 0 10px;
-			color: #f4bdd5;
-			font-size: 11px;
-			font-weight: 700;
-			letter-spacing: .24em;
-			text-transform: uppercase;
-		}
-		.blind-box {
-			position: relative;
-			width: 126px;
-			height: 132px;
-			margin: 0 auto 28px;
-			filter: drop-shadow(0 18px 28px rgba(214, 78, 139, .28));
-			animation: boxFloat 2.6s ease-in-out infinite;
-		}
-		.box-glow {
-			position: absolute;
-			left: 50%;
-			bottom: -12px;
-			width: 150px;
-			height: 62px;
-			border-radius: 50%;
-			background: radial-gradient(ellipse, rgba(255, 156, 198, .34), transparent 68%);
-			transform: translateX(-50%);
-			transition: transform .7s ease, opacity .7s ease;
-		}
-		.box-body,
-		.box-lid {
-			position: absolute;
-			left: 50%;
-			border: 1px solid rgba(255, 255, 255, .34);
-			background: linear-gradient(135deg, #f273a2 0%, #c759a4 56%, #8754a8 100%);
-			transform: translateX(-50%);
-		}
-		.box-body {
-			bottom: 4px;
-			width: 100px;
-			height: 82px;
-			border-radius: 5px 5px 16px 16px;
-			box-shadow: inset 0 -12px 20px rgba(69, 26, 85, .18);
-		}
-		.box-lid {
-			top: 27px;
-			z-index: 2;
-			width: 116px;
-			height: 35px;
-			border-radius: 11px 11px 5px 5px;
-			transform-origin: 82% 90%;
-			transition: transform .75s cubic-bezier(.2, .86, .24, 1.25);
-		}
-		.box-ribbon-v,
-		.box-ribbon-h {
-			position: absolute;
-			z-index: 3;
-			display: block;
-			background: linear-gradient(90deg, #ffe9ac, #ffd26f 46%, #fff0bb);
-			box-shadow: 0 0 10px rgba(255, 221, 132, .34);
-		}
-		.box-ribbon-v {
-			top: 0;
-			left: 50%;
-			width: 18px;
-			height: 100%;
-			transform: translateX(-50%);
-		}
-		.box-ribbon-h {
-			top: 50%;
-			left: 0;
-			width: 100%;
-			height: 13px;
-			transform: translateY(-50%);
-		}
-		.box-bow {
-			position: absolute;
-			left: 50%;
-			top: -23px;
-			z-index: 4;
-			width: 48px;
-			height: 28px;
-			transform: translateX(-50%);
-		}
-		.box-bow::before,
-		.box-bow::after {
-			content: "";
-			position: absolute;
-			top: 2px;
-			width: 27px;
-			height: 21px;
-			border: 6px solid #ffdf83;
-			border-radius: 70% 45% 70% 45%;
-		}
-		.box-bow::before { right: 22px; transform: rotate(18deg); }
-		.box-bow::after { left: 22px; transform: scaleX(-1) rotate(18deg); }
-		.box-spark {
-			position: absolute;
-			left: 50%;
-			top: 38px;
-			z-index: 1;
-			width: 6px;
-			height: 6px;
-			border-radius: 50%;
-			background: #ffe8a8;
-			box-shadow: 0 0 12px #ffd87c;
-			opacity: 0;
-		}
-		.start-screen.is-opening .blind-box { animation: boxOpenPulse .78s ease both; }
-		.start-screen.is-opening .box-lid { transform: translate(-40%, -42px) rotate(24deg); }
-		.start-screen.is-opening .box-glow { opacity: 1; transform: translateX(-50%) scale(1.8); }
-		.start-screen.is-opening .box-spark { animation: boxSpark .72s ease-out both; }
-		.start-screen.is-opening .box-spark:nth-of-type(1) { --sx: -55px; --sy: -58px; }
-		.start-screen.is-opening .box-spark:nth-of-type(2) { --sx: 52px; --sy: -44px; animation-delay: .05s; }
-		.start-screen.is-opening .box-spark:nth-of-type(3) { --sx: -72px; --sy: -8px; animation-delay: .1s; }
-		.start-screen.is-opening .box-spark:nth-of-type(4) { --sx: 68px; --sy: -4px; animation-delay: .14s; }
-		.start-title {
-			margin: 0 0 10px;
-			font-family: "STKaiti", "KaiTi", "Microsoft YaHei", sans-serif;
-			font-size: clamp(28px, 7vw, 40px);
-			font-weight: 600;
-			letter-spacing: .08em;
-			text-shadow: 0 0 24px rgba(255, 191, 215, .28);
-		}
-		.start-note {
-			margin: 0 0 26px;
-			color: rgba(255, 255, 255, .65);
-			font-size: 14px;
-			letter-spacing: .04em;
-		}
-		.start-button {
-			min-width: 172px;
-			padding: 13px 28px;
-			color: #fff;
-			border: 1px solid rgba(255, 255, 255, .3);
-			border-radius: 999px;
-			background: linear-gradient(135deg, #eb5f91, #a95fbd);
-			box-shadow: 0 12px 36px rgba(214, 78, 139, .3);
-			font: 600 16px/1 "Microsoft YaHei", sans-serif;
-			letter-spacing: .08em;
-			cursor: pointer;
-			transition: transform .2s ease, box-shadow .2s ease;
-		}
-		.start-button:hover,
-		.start-button:focus-visible {
-			transform: translateY(-2px);
-			box-shadow: 0 16px 42px rgba(214, 78, 139, .4);
-		}
-		.music-button {
-			position: fixed;
-			top: max(16px, env(safe-area-inset-top));
-			right: max(16px, env(safe-area-inset-right));
-			z-index: 10002;
-			display: none;
-			width: 46px;
-			height: 46px;
-			color: #fff;
-			border: 1px solid rgba(255, 255, 255, .24);
-			border-radius: 50%;
-			background: rgba(18, 7, 24, .56);
-			box-shadow: 0 10px 30px rgba(0, 0, 0, .28);
-			backdrop-filter: blur(8px);
-			font-size: 20px;
-			cursor: pointer;
-		}
-		.music-button.is-visible {
-			display: block;
-		}
-		.music-button.is-playing {
-			animation: musicPulse 1.4s ease-in-out infinite;
-		}
-		.final-scene {
-			position: fixed;
-			inset: 0;
-			z-index: 10000;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			padding: max(28px, env(safe-area-inset-top)) 20px max(22px, env(safe-area-inset-bottom));
-			overflow: hidden;
-			background:
-				radial-gradient(circle at 50% 68%, rgba(154, 61, 107, .26), transparent 39%),
-				linear-gradient(180deg, rgba(5, 2, 8, .38), rgba(5, 1, 7, .82));
-			opacity: 0;
-			visibility: hidden;
-			pointer-events: none;
-			transition: opacity 1.2s ease, visibility 1.2s ease;
-		}
-		.final-scene::before {
-			content: "";
-			position: absolute;
-			inset: 8% 12% 18%;
-			border-radius: 50%;
-			background: radial-gradient(ellipse, rgba(255, 173, 210, .11), rgba(255, 206, 145, .04) 40%, transparent 72%);
-			filter: blur(18px);
-			pointer-events: none;
-			animation: warmBreathe 5.5s ease-in-out infinite;
-		}
-		.final-scene.is-visible {
-			opacity: 1;
-			visibility: visible;
-		}
-		.final-content {
-			position: relative;
-			z-index: 2;
-			width: min(92vw, 720px);
-			text-align: center;
-		}
-		.final-title {
-			margin: 0 auto 12px;
-			font-family: "STKaiti", "KaiTi", "Microsoft YaHei", sans-serif;
-			font-size: clamp(26px, 5.5vw, 43px);
-			font-weight: 600;
-			line-height: 1.25;
-			letter-spacing: .06em;
-			color: #ffe8f1;
-			background: linear-gradient(100deg, #ffd6e8 8%, #fff4d2 50%, #ffc2df 92%);
-			-webkit-background-clip: text;
-			background-clip: text;
-			-webkit-text-fill-color: transparent;
-			text-shadow: 0 0 28px rgba(255, 185, 211, .25);
-		}
-		.final-copy {
-			max-width: 620px;
-			margin: 0 auto;
-			color: rgba(255, 248, 252, .90);          /* 提亮，提高可读性 */
-			font-size: clamp(13px, 2.8vw, 16px);
-			line-height: 1.9;
-			letter-spacing: .04em;
-			text-shadow: 0 1px 8px rgba(0, 0, 0, .38); /* 增加阴影，手机更清晰 */
-		}
-		.mobile-break { display: none; }
-		.final-signature {
-			margin: 10px 0 0;
-			color: #ffeaf2;                            /* 更亮 */
-			text-shadow: 0 0 18px rgba(255, 166, 205, .5), 0 1px 4px rgba(0,0,0,.4);
-			font-family: "STKaiti", "KaiTi", serif;
-			font-size: clamp(18px, 4vw, 24px);
-			letter-spacing: .12em;
-		}
-		.final-message {
-			position: relative;
-			padding: 16px 22px 14px;
-		}
-		.final-message::before {
-			content: "";
-			position: absolute;
-			inset: 0;
-			z-index: -1;
-			border: 1px solid rgba(255, 210, 228, .18);
-			border-radius: 24px;
-			background: linear-gradient(135deg, rgba(255, 181, 211, .13), rgba(255, 224, 173, .06)); /* 稍微提高不透明度 */
-			box-shadow: 0 18px 60px rgba(91, 22, 73, .16), inset 0 1px 0 rgba(255, 255, 255, .08);
-			backdrop-filter: blur(3px);
-		}
-		.flower-bouquet {
-			display: none;
-		}
-		.flower-particle-canvas {
-			display: block;
-			width: min(88vw, 590px);
-			aspect-ratio: 600 / 340;
-			height: auto;
-			margin: 10px auto -8px;
-			filter: drop-shadow(0 14px 26px rgba(219, 72, 139, .25));
-			transform: translateY(34px) scale(.9);
-			opacity: 0;
-		}
-		.final-scene.is-visible .flower-particle-canvas {
-			animation: bouquetIn 1.25s .15s cubic-bezier(.2, .78, .26, 1.12) forwards;
-		}
-		.final-scene.is-visible .final-message {
-			animation: messageIn 1s .65s ease both;
-		}
-		.warm-particles,
-		.petal-layer {
-			position: absolute;
-			inset: 0;
-			overflow: hidden;
-		}
-		.warm-particle,
-		.falling-petal {
-			position: absolute;
-			left: var(--x);
-			bottom: -24px;
-			will-change: transform, opacity;
-		}
-		.warm-particle {
-			width: var(--size);
-			height: var(--size);
-			border-radius: 50%;
-			background: radial-gradient(circle, #fff8dd 0 22%, #ffc789 36%, rgba(255, 119, 165, .08) 72%);
-			box-shadow: 0 0 12px rgba(255, 187, 129, .75);
-			animation: warmFloat var(--duration) var(--delay) ease-in-out infinite;
-		}
-		.falling-petal {
-			width: var(--size);
-			height: calc(var(--size) * .62);
-			border-radius: 90% 12% 90% 12%;
-			background: linear-gradient(135deg, #ff9ab9, #cf4d86);
-			box-shadow: 0 0 8px rgba(255, 111, 159, .3);
-			animation: petalDrift var(--duration) var(--delay) linear infinite;
-		}
-		.canvas {
-			transition: opacity 1.1s ease;
-		}
-		.canvas.final-mode {
-			opacity: .12;
-		}
-		.butterfly-particle-canvas {
-			position: fixed;
-			inset: 0;
-			z-index: 10000;
-			width: 100%;
-			height: 100%;
-			pointer-events: none;
-			opacity: 0;
-			transition: opacity .55s ease;
-		}
-		body.story-cake .butterfly-particle-canvas {
-			opacity: 1;
-		}
-		@keyframes startIn {
-			from { opacity: 0; transform: translateY(16px); }
-			to { opacity: 1; transform: translateY(0); }
-		}
-		@keyframes boxFloat {
-			50% { transform: translateY(-7px) rotate(1deg); }
-		}
-		@keyframes boxOpenPulse {
-			45% { transform: translateY(5px) scale(.96); }
-			100% { transform: translateY(-5px) scale(1.04); }
-		}
-		@keyframes boxSpark {
-			0% { opacity: 0; transform: translate(-50%, 0) scale(.3); }
-			32% { opacity: 1; }
-			100% { opacity: 0; transform: translate(calc(-50% + var(--sx)), var(--sy)) scale(1.1); }
-		}
-		@keyframes bouquetIn {
-			to { opacity: 1; transform: translateY(0) scale(1); }
-		}
-		@keyframes messageIn {
-			from { opacity: 0; transform: translateY(15px); }
-			to { opacity: 1; transform: translateY(0); }
-		}
-		@keyframes warmBreathe {
-			0%, 100% { opacity: .55; transform: scale(.96); }
-			50% { opacity: .9; transform: scale(1.04); }
-		}
-		@keyframes warmFloat {
-			0% { opacity: 0; transform: translate3d(0, 0, 0) scale(.55); }
-			18% { opacity: .85; }
-			70% { opacity: .5; }
-			100% { opacity: 0; transform: translate3d(var(--drift), -105vh, 0) scale(1.25); }
-		}
-		@keyframes petalDrift {
-			0% { opacity: 0; transform: translate3d(0, -8vh, 0) rotate(0deg); }
-			12% { opacity: .72; }
-			85% { opacity: .55; }
-			100% { opacity: 0; transform: translate3d(var(--drift), -112vh, 0) rotate(520deg); }
-		}
-		@keyframes musicPulse {
-			50% { color: #ffc6dd; transform: scale(1.06); }
-		}
-		@media (max-width: 600px) {
-			/* 手机端让文字粒子成为主视觉，压低背景网格和烟花的干扰。 */
-			body.story-playing #canvas { opacity: .46; }
-			body.story-finished #canvas { opacity: .58; }
-			.start-screen { padding: 18px; }
-			.blind-box { transform: scale(.9); margin-bottom: 18px; }
-			.start-title { font-size: clamp(27px, 9vw, 36px); }
-			.final-content { width: 94vw; }
-			.final-kicker { margin-bottom: 7px; font-size: 10px; letter-spacing: .18em; }
-			.final-title {
-				margin-bottom: 8px;
-				font-size: clamp(24px, 7.2vw, 36px);
-				line-height: 1.35;
-			}
-			.final-copy {
-				max-width: 92vw;
-				font-size: clamp(14px, 3.6vw, 16px);
-				line-height: 1.85;
-				letter-spacing: .03em;
-			}
-			.final-signature {
-				font-size: clamp(17px, 4.5vw, 22px);
-			}
-			.final-message { padding: 12px 8px 10px; }
-			.mobile-break { display: initial; }
-			.flower-particle-canvas { width: min(96vw, 510px); margin-top: 2px; }
-		}
-		@media (prefers-reduced-motion: reduce) {
-			*, *::before, *::after {
-				animation-duration: .01ms !important;
-				animation-iteration-count: 1 !important;
-				scroll-behavior: auto !important;
-			}
+			background: #000;
 		}
 	</style>
+
 </head>
+
 <body>
 	<canvas id="canvas" style="position:absolute;width:100%;height:100%;z-index:8888"></canvas>
 	<canvas style="position:absolute;width:100%;height:100%;z-index:9999" class="canvas"></canvas>
-	<canvas id="butterfly-particle-canvas" class="butterfly-particle-canvas" aria-hidden="true"></canvas>
-	<div id="start-screen" class="start-screen">
-		<div class="start-content">
-			<div class="blind-box" aria-hidden="true">
-				<span class="box-glow"></span>
-				<span class="box-body"><span class="box-ribbon-v"></span></span>
-				<span class="box-lid"><span class="box-ribbon-v"></span><span class="box-ribbon-h"></span><span class="box-bow"></span></span>
-				<i class="box-spark"></i><i class="box-spark"></i><i class="box-spark"></i><i class="box-spark"></i>
-			</div>
-			<p class="start-kicker">A LITTLE SURPRISE</p>
-			<h1 class="start-title">有一份神秘礼物</h1>
-			<p class="start-note">猜猜盲盒里，藏着什么内容</p>
-			<button id="start-button" class="start-button" type="button">拆开盲盒</button>
-		</div>
-	</div>
-	<button id="music-button" class="music-button" type="button" aria-label="暂停背景音乐">♪</button>
-	<audio id="bgm" loop preload="auto">
-		<source src="./Gentle-Theme-MusicBox.mp3" type="audio/mpeg">
-		<source src="./HappyBirthday.mp3" type="audio/mpeg">
-	</audio>
-	<section id="final-scene" class="final-scene" aria-hidden="true">
-		<div id="warm-particles" class="warm-particles" aria-hidden="true"></div>
-		<div id="petal-layer" class="petal-layer" aria-hidden="true"></div>
-		<div class="final-content">
-			<canvas id="flower-particle-canvas" class="flower-particle-canvas" width="600" height="340" role="img" aria-label="由彩色粒子汇聚而成的玫瑰、郁金香和雏菊花束"></canvas>
-			<svg class="flower-bouquet" viewBox="0 0 600 340" role="img" aria-label="由玫瑰、郁金香和雏菊组成的花束">
-				<defs>
-					<linearGradient id="roseGradient" x1="0" y1="0" x2="1" y2="1">
-						<stop offset="0" stop-color="#ffb0c9"/><stop offset=".48" stop-color="#ef6c9a"/><stop offset="1" stop-color="#ad376c"/>
-					</linearGradient>
-					<linearGradient id="tulipGradient" x1="0" y1="0" x2="0" y2="1">
-						<stop offset="0" stop-color="#ffcab8"/><stop offset="1" stop-color="#ee7690"/>
-					</linearGradient>
-					<linearGradient id="leafGradient" x1="0" y1="0" x2="1" y2="1">
-						<stop offset="0" stop-color="#78b68a"/><stop offset="1" stop-color="#2e6757"/>
-					</linearGradient>
-					<radialGradient id="daisyCenter"><stop offset="0" stop-color="#fff1a8"/><stop offset="1" stop-color="#df9d43"/></radialGradient>
-					<g id="rose">
-						<ellipse rx="35" ry="24" fill="url(#roseGradient)" transform="rotate(-18) translate(-9 0)"/>
-						<ellipse rx="34" ry="23" fill="url(#roseGradient)" transform="rotate(35) translate(7 1)"/>
-						<ellipse rx="28" ry="21" fill="#f47eaa" transform="rotate(95) translate(0 -3)"/>
-						<path d="M-19 4C-11-16 18-17 21 1C23 16 3 22-8 14C-17 8-8-3 3-2C12-1 12 8 5 10" fill="none" stroke="#9f3766" stroke-width="4" stroke-linecap="round"/>
-					</g>
-					<g id="daisy">
-						<g fill="#fff8f1">
-							<ellipse cy="-22" rx="8" ry="19"/><ellipse cy="-22" rx="8" ry="19" transform="rotate(45)"/>
-							<ellipse cy="-22" rx="8" ry="19" transform="rotate(90)"/><ellipse cy="-22" rx="8" ry="19" transform="rotate(135)"/>
-							<ellipse cy="-22" rx="8" ry="19" transform="rotate(180)"/><ellipse cy="-22" rx="8" ry="19" transform="rotate(225)"/>
-							<ellipse cy="-22" rx="8" ry="19" transform="rotate(270)"/><ellipse cy="-22" rx="8" ry="19" transform="rotate(315)"/>
-						</g>
-						<circle r="13" fill="url(#daisyCenter)"/>
-					</g>
-					<g id="tulip">
-						<path d="M-30-24C-14-19-9-36 0-46C8-34 14-19 30-24C30 8 18 24 0 24C-18 24-30 8-30-24Z" fill="url(#tulipGradient)"/>
-						<path d="M0-44C-7-20-7 6 0 22C8 4 7-20 0-44Z" fill="#ff9dab" opacity=".48"/>
-					</g>
-				</defs>
-				<g fill="none" stroke="#4f8b68" stroke-width="5" stroke-linecap="round" opacity=".9">
-					<path d="M300 324C290 250 255 188 203 126"/><path d="M300 324C303 242 302 175 300 105"/>
-					<path d="M300 324C327 250 369 190 410 139"/><path d="M300 324C252 260 204 220 151 185"/>
-					<path d="M300 324C346 268 397 232 455 207"/><path d="M300 324C277 245 251 213 236 177"/>
-					<path d="M300 324C327 249 344 209 350 170"/>
-				</g>
-				<g fill="url(#leafGradient)" opacity=".96">
-					<path d="M261 254C218 248 201 224 199 201C235 201 259 220 261 254Z"/>
-					<path d="M330 265C371 257 389 232 391 209C354 210 332 231 330 265Z"/>
-					<path d="M238 215C202 207 189 185 190 164C221 168 240 187 238 215Z"/>
-					<path d="M365 219C401 208 412 184 409 164C378 170 361 190 365 219Z"/>
-					<path d="M286 270C262 242 264 216 277 198C299 222 301 245 286 270Z"/>
-					<path d="M315 235C334 207 330 184 316 169C299 193 301 216 315 235Z"/>
-				</g>
-				<use href="#tulip" transform="translate(151 181) rotate(-27) scale(.84)"/>
-				<use href="#tulip" transform="translate(455 202) rotate(24) scale(.82)"/>
-				<use href="#daisy" transform="translate(222 151) rotate(-12) scale(.86)"/>
-				<use href="#daisy" transform="translate(382 160) rotate(10) scale(.78)"/>
-				<use href="#daisy" transform="translate(345 196) scale(.68)"/>
-				<use href="#rose" transform="translate(203 123) rotate(-12) scale(1.03)"/>
-				<use href="#rose" transform="translate(300 100) scale(1.17)"/>
-				<use href="#rose" transform="translate(410 136) rotate(13) scale(1.04)"/>
-				<use href="#rose" transform="translate(270 178) rotate(-5) scale(.82)"/>
-				<path d="M250 270Q300 289 350 270L336 330Q300 342 264 330Z" fill="#e7c5ae" opacity=".88"/>
-				<path d="M273 281Q300 300 327 281" fill="none" stroke="#c76a8b" stroke-width="10" stroke-linecap="round"/>
-			</svg>
-			<div class="final-message">
-				<p class="final-kicker">把每一份温柔，送给今天的你</p>
-				<h2 class="final-title">愿你永远被温柔与美好环绕</h2>
-				<p class="final-copy">愿往后的每一天，都有鲜花、阳光和好心情。<br>也愿我们在慢慢了解彼此的路上，<br class="mobile-break">遇见更多值得期待的风景。<br>愿你被世界温柔以待，也被自己的光照亮。</p>
-				<p class="final-signature">小楠老师，生日快乐</p>
-			</div>
-		</div>
-	</section>
 	<div class="overlay">
 		<div class="tabs">
 			<div class="tabs-labels"><span class="tabs-label">Commands</span><span class="tabs-label">Info</span><span
 					class="tabs-label">Share</span></div>
+
 			<div class="tabs-panels">
 				<ul class="tabs-panel commands">
 				</ul>
@@ -562,6 +35,7 @@
 	</div>
 	<script>
 		function initVars() {
+
 			pi = Math.PI;
 			ctx = canvas.getContext("2d");
 			canvas.width = canvas.clientWidth;
@@ -570,71 +44,26 @@
 			cy = canvas.height / 2;
 			playerZ = -25;
 			playerX = playerY = playerVX = playerVY = playerVZ = pitch = yaw = pitchV = yawV = 0;
-			scale = Math.min(600, Math.max(330, canvas.width * .72));
-			seedTimer = 0; seedInterval = canvas.width < 600 ? 24 : 17, seedLife = 100; gravity = .02;
-			isMobileCanvas = canvas.width < 600;
-			gridXStep = isMobileCanvas ? 6 : 3;
-			gridZStep = isMobileCanvas ? 7 : 4;
-			frameInterval = isMobileCanvas ? 1000 / 30 : 1000 / 45;
-			lastFrameTime = 0;
+			scale = 600;
+			seedTimer = 0; seedInterval = 5, seedLife = 100; gravity = .02;
 			seeds = new Array();
-			sparkColors = ["#ff8fb1", "#ffd58a", "#b9a4ff", "#86d9e8", "#fff1c7", "#b5e8c8"];
+			sparkPics = new Array();
+			s = "https://cantelope.org/NYE/";
+			for (i = 1; i <= 10; ++i) {
+				sparkPic = new Image();
+				sparkPic.src = s + "spark" + i + ".png";
+				sparkPics.push(sparkPic);
+			}
 			sparks = new Array();
-			meteors = new Array();
-			meteorTimer = isMobileCanvas ? 62 : 44;
-			sunOpacity = 0;
-			moonOpacity = 0;
-			skyStars = new Array();
-			moonParticles = new Array();
-			sunParticles = new Array();
-			for (m = -10; m <= 10; m++) {
-				for (n = -10; n <= 10; n++) {
-					var moonPX = m / 10,
-						moonPY = n / 10,
-						moonOuter = moonPX * moonPX + moonPY * moonPY,
-						moonCutoutX = moonPX + .36,
-						moonCutoutY = moonPY + .25,
-						moonCutout = moonCutoutX * moonCutoutX + moonCutoutY * moonCutoutY;
-					if (moonOuter <= 1 && moonCutout > .72 && Math.random() > .12) {
-						moonParticles.push({
-							x: moonPX,
-							y: moonPY,
-							r: .7 + Math.random() * .7,
-							phase: Math.random() * Math.PI * 2,
-							color: Math.random() > .78 ? "#fff8d4" : "#ffe9a5"
-						});
-					}
-				}
-			}
-			for (m = -10; m <= 10; m++) {
-				for (n = -10; n <= 10; n++) {
-					var sunPX = m / 10,
-						sunPY = n / 10,
-						sunDistance = sunPX * sunPX + sunPY * sunPY;
-					if (sunDistance <= 1 && Math.random() > .1) {
-						sunParticles.push({
-							x: sunPX,
-							y: sunPY,
-							r: .75 + Math.random() * .62,
-							phase: Math.random() * Math.PI * 2,
-							color: Math.random() > .72 ? "#fff2b0" : (Math.random() > .5 ? "#ffd36f" : "#ffb45f")
-						});
-					}
-				}
-			}
-			for (m = 0; m < (isMobileCanvas ? 20 : 38); m++) {
-					skyStars.push({
-						x: .04 + Math.random() * .92,
-						y: .04 + Math.random() * .42,
-						r: .6 + Math.random() * 1.5,
-					phase: Math.random() * Math.PI * 2,
-					twinkle: m % 3 === 0,
-					color: Math.random() > .62 ? "#ffd995" : "#d6c9ff"
-				});
-			}
+			pow1 = new Audio(s + "pow1.ogg");
+			pow2 = new Audio(s + "pow2.ogg");
+			pow3 = new Audio(s + "pow3.ogg");
+			pow4 = new Audio(s + "pow4.ogg");
 			frames = 0;
 		}
+
 		function rasterizePoint(x, y, z) {
+
 			var p, d;
 			x -= playerX;
 			y -= playerY;
@@ -666,7 +95,9 @@
 				};
 			}
 		}
+
 		function spawnSeed() {
+
 			seed = new Object();
 			seed.x = -50 + Math.random() * 100;
 			seed.y = 25;
@@ -677,10 +108,26 @@
 			seed.born = frames;
 			seeds.push(seed);
 		}
+
 		function splode(x, y, z) {
-			t = canvas.width < 600 ? 18 + parseInt(Math.random() * 22) : 28 + parseInt(Math.random() * 36);
-			sparkV = 1.2 + Math.random() * 2.1;
-			explosionColor = sparkColors[parseInt(Math.random() * sparkColors.length)];
+
+			t = 5 + parseInt(Math.random() * 150);
+			sparkV = 1 + Math.random() * 2.5;
+			type = parseInt(Math.random() * 3);
+			switch (type) {
+				case 0:
+					pic1 = parseInt(Math.random() * 10);
+					break;
+				case 1:
+					pic1 = parseInt(Math.random() * 10);
+					do { pic2 = parseInt(Math.random() * 10); } while (pic2 == pic1);
+					break;
+				case 2:
+					pic1 = parseInt(Math.random() * 10);
+					do { pic2 = parseInt(Math.random() * 10); } while (pic2 == pic1);
+					do { pic3 = parseInt(Math.random() * 10); } while (pic3 == pic1 || pic3 == pic2);
+					break;
+			}
 			for (m = 1; m < t; ++m) {
 				spark = new Object();
 				spark.x = x; spark.y = y; spark.z = z;
@@ -690,53 +137,37 @@
 				spark.vx = Math.sin(p1) * Math.sin(p2) * v;
 				spark.vz = Math.cos(p1) * Math.sin(p2) * v;
 				spark.vy = Math.cos(p2) * v;
-				spark.color = Math.random() > .14 ? explosionColor : "#ffffff";
-				spark.radius = 22 + Math.random() * 38;
+				switch (type) {
+					case 0: spark.img = sparkPics[pic1]; break;
+					case 1:
+						spark.img = sparkPics[parseInt(Math.random() * 2) ? pic1 : pic2];
+						break;
+					case 2:
+						switch (parseInt(Math.random() * 3)) {
+							case 0: spark.img = sparkPics[pic1]; break;
+							case 1: spark.img = sparkPics[pic2]; break;
+							case 2: spark.img = sparkPics[pic3]; break;
+						}
+						break;
+				}
+				spark.radius = 25 + Math.random() * 50;
 				spark.alpha = 1;
 				spark.trail = new Array();
 				sparks.push(spark);
 			}
+			switch (parseInt(Math.random() * 4)) {
+				case 0: pow = new Audio(s + "pow1.ogg"); break;
+				case 1: pow = new Audio(s + "pow2.ogg"); break;
+				case 2: pow = new Audio(s + "pow3.ogg"); break;
+				case 3: pow = new Audio(s + "pow4.ogg"); break;
+			}
+			d = Math.sqrt((x - playerX) * (x - playerX) + (y - playerY) * (y - playerY) + (z - playerZ) * (z - playerZ));
+			pow.volume = 1.5 / (1 + d / 10);
+			pow.play();
 		}
-		function spawnMeteor() {
-			var startX = canvas.width * (.58 + Math.random() * .38);
-			meteors.push({
-				x: startX,
-				y: canvas.height * (.04 + Math.random() * .28),
-				vx: -(3.2 + Math.random() * 2.4),
-				vy: 2.4 + Math.random() * 1.8,
-				life: 0,
-				maxLife: 42 + Math.random() * 22,
-				color: Math.random() > .5 ? "#ffe7a6" : "#c6e8ff",
-				trail: []
-			});
-		}
+
 		function doLogic() {
-			var finalStage = document.body.classList.contains("story-finished"),
-				portraitStage = document.body.classList.contains("story-portrait"),
-				cakeStage = document.body.classList.contains("story-cake"),
-				playingStage = document.body.classList.contains("story-playing"),
-				skyCycle = Math.sin(((window.storySkyStartedAt ? Date.now() - window.storySkyStartedAt : 0) / 4800)),
-				targetSunOpacity = playingStage && !portraitStage && !cakeStage ? Math.max(0, skyCycle) : 0,
-				targetMoonOpacity = playingStage && !portraitStage && !cakeStage ? Math.max(0, -skyCycle) : 0;
-			if (cakeStage) targetMoonOpacity = 1;
-			if (finalStage && window.finalSceneStartedAt && Date.now() - window.finalSceneStartedAt < 6500) {
-				targetMoonOpacity = 1;
-			}
-			sunOpacity += (targetSunOpacity - sunOpacity) * .035;
-			moonOpacity += (targetMoonOpacity - moonOpacity) * .035;
-			meteorTimer--;
-			if (meteorTimer <= 0 && meteors.length < (isMobileCanvas ? 2 : 3)) {
-				spawnMeteor();
-				meteorTimer = isMobileCanvas ? 70 + Math.random() * 45 : 48 + Math.random() * 34;
-			}
-			for (i = meteors.length - 1; i >= 0; --i) {
-				meteors[i].trail.push({ x: meteors[i].x, y: meteors[i].y });
-				if (meteors[i].trail.length > 7) meteors[i].trail.shift();
-				meteors[i].x += meteors[i].vx;
-				meteors[i].y += meteors[i].vy;
-				meteors[i].life++;
-				if (meteors[i].life > meteors[i].maxLife) meteors.splice(i, 1);
-			}
+
 			if (seedTimer < frames) {
 				seedTimer = frames + seedInterval * Math.random() * 10;
 				spawnSeed();
@@ -790,115 +221,22 @@
 			playerZ = Math.cos(p + t) * d;
 			yaw = pi + p + t;
 		}
+
 		function rgb(col) {
+
 			var r = parseInt((.5 + Math.sin(col) * .5) * 16);
 			var g = parseInt((.5 + Math.cos(col) * .5) * 16);
 			var b = parseInt((.5 - Math.sin(col) * .5) * 16);
 			return "#" + r.toString(16) + g.toString(16) + b.toString(16);
 		}
+
 		function draw() {
+
 			ctx.clearRect(0, 0, cx * 2, cy * 2);
-			// 盲盒首页保持神秘，拆开后才出现月亮与星空。
-			if (document.body.classList.contains("story-playing") || document.body.classList.contains("story-finished")) {
-				ctx.save();
-				for (i = 0; i < skyStars.length; i++) {
-					var star = skyStars[i];
-					var pulse = .5 + .5 * Math.sin(frames / 22 + star.phase),
-						starSize = star.r * (.82 + pulse * .34);
-					ctx.globalAlpha = .22 + pulse * .54;
-					ctx.fillStyle = star.color;
-					ctx.beginPath();
-					ctx.arc(star.x * canvas.width, star.y * canvas.height, starSize, 0, pi * 2);
-					ctx.fill();
-					if (star.twinkle && pulse > .78) {
-						ctx.globalAlpha = (pulse - .78) * 2.2;
-						ctx.strokeStyle = star.color;
-						ctx.lineWidth = 1;
-						ctx.beginPath();
-						ctx.moveTo(star.x * canvas.width - starSize * 3.2, star.y * canvas.height);
-						ctx.lineTo(star.x * canvas.width + starSize * 3.2, star.y * canvas.height);
-						ctx.moveTo(star.x * canvas.width, star.y * canvas.height - starSize * 3.2);
-						ctx.lineTo(star.x * canvas.width, star.y * canvas.height + starSize * 3.2);
-						ctx.stroke();
-					}
-				}
-				var sunX = canvas.width * .18,
-					sunY = canvas.height * .18,
-					sunR = Math.min(39, Math.max(25, canvas.width * .043)),
-					sunPulse = .5 + .5 * Math.sin(frames / 30 + .8);
-				ctx.shadowBlur = isMobileCanvas || sunOpacity < .08 ? 0 : 5;
-				ctx.shadowColor = "rgba(255, 190, 86, .6)";
-				for (m = 0; m < sunParticles.length; m++) {
-					var sunParticle = sunParticles[m],
-						sunParticlePulse = .82 + .18 * Math.sin(frames / 24 + sunParticle.phase),
-						sunDotX = sunX + sunParticle.x * sunR,
-						sunDotY = sunY + sunParticle.y * sunR;
-					ctx.globalAlpha = (.7 + sunParticlePulse * .25) * sunOpacity;
-					ctx.fillStyle = sunParticle.color;
-					ctx.beginPath();
-					ctx.arc(sunDotX, sunDotY, sunParticle.r * (.86 + sunParticlePulse * .15), 0, pi * 2);
-					ctx.fill();
-				}
-				for (m = 0; m < 12; m++) {
-					var sunAngle = pi * 2 * m / 12,
-						rayDistance = sunR * (1.22 + (m % 2) * .16),
-						rayX = sunX + Math.cos(sunAngle) * rayDistance,
-						rayY = sunY + Math.sin(sunAngle) * rayDistance;
-					ctx.globalAlpha = (.38 + sunPulse * .3) * sunOpacity;
-					ctx.fillStyle = m % 3 === 0 ? "#fff1af" : "#ffc76d";
-					ctx.beginPath();
-					ctx.arc(rayX, rayY, isMobileCanvas ? 1.2 : 1.7, 0, pi * 2);
-					ctx.fill();
-				}
-				ctx.shadowBlur = 0;
-				var moonX = canvas.width * .79,
-					moonY = canvas.height * .17,
-					moonR = Math.min(44, Math.max(27, canvas.width * .047)),
-					moonPulse = .5 + .5 * Math.sin(frames / 28);
-				// 光只跟随月牙粒子，不再绘制圆盘底色。
-				ctx.shadowBlur = isMobileCanvas || moonOpacity < .08 ? 0 : 6;
-				ctx.shadowColor = "rgba(255, 225, 150, .72)";
-				for (m = 0; m < moonParticles.length; m++) {
-					var moonParticle = moonParticles[m],
-						moonParticlePulse = .78 + .22 * Math.sin(frames / 25 + moonParticle.phase),
-						particleX = moonX + moonParticle.x * moonR,
-						particleY = moonY + moonParticle.y * moonR;
-					ctx.globalAlpha = (.66 + moonParticlePulse * .27) * moonOpacity;
-					ctx.fillStyle = moonParticle.color;
-					ctx.beginPath();
-					ctx.arc(particleX, particleY, moonParticle.r * (.85 + moonParticlePulse * .18), 0, pi * 2);
-					ctx.fill();
-				}
-				ctx.shadowBlur = 0;
-				ctx.restore();
-			}
-			// 流星只保留很少几颗，尾巴短而亮，避免遮挡文字。
-			for (i = 0; i < meteors.length; i++) {
-				var meteor = meteors[i];
-				ctx.strokeStyle = meteor.color;
-				ctx.lineCap = "round";
-				ctx.lineWidth = isMobileCanvas ? 1.4 : 1.8;
-				ctx.globalAlpha = .16;
-				ctx.beginPath();
-				for (j = meteor.trail.length - 1; j >= 0; j--) {
-					var trailPoint = meteor.trail[j];
-					if (j === meteor.trail.length - 1) ctx.moveTo(trailPoint.x, trailPoint.y);
-					else ctx.lineTo(trailPoint.x, trailPoint.y);
-				}
-				ctx.stroke();
-				ctx.globalAlpha = .9;
-				ctx.fillStyle = meteor.color;
-				ctx.beginPath();
-				ctx.arc(meteor.x, meteor.y, isMobileCanvas ? 1.8 : 2.4, 0, pi * 2);
-				ctx.fill();
-			}
-			ctx.globalAlpha = 1;
+
 			ctx.fillStyle = "#ff8";
-			var finalGrid = document.body.classList.contains("story-finished"),
-				drawGridXStep = finalGrid ? (isMobileCanvas ? 10 : 6) : gridXStep,
-				drawGridZStep = finalGrid ? (isMobileCanvas ? 11 : 7) : gridZStep;
-			for (i = -100; i < 100; i += drawGridXStep) {
-				for (j = -100; j < 100; j += drawGridZStep) {
+			for (i = -100; i < 100; i += 3) {
+				for (j = -100; j < 100; j += 4) {
 					x = i; z = j; y = 25;
 					point = rasterizePoint(x, y, z);
 					if (point.d != -1) {
@@ -924,20 +262,30 @@
 			for (i = 0; i < sparks.length; ++i) {
 				point = rasterizePoint(sparks[i].x, sparks[i].y, sparks[i].z);
 				if (point.d != -1) {
-					size = Math.max(1.2, Math.min(7, sparks[i].radius * 80 / (1 + point.d)));
+					size = sparks[i].radius * 200 / (1 + point.d);
 					if (sparks[i].alpha < 0) sparks[i].alpha = 0;
 					if (sparks[i].trail.length) {
 						point1.x = point.x;
 						point1.y = point.y;
-						ctx.strokeStyle = sparks[i].color;
-						ctx.lineCap = "round";
+						switch (sparks[i].img) {
+							case sparkPics[0]: ctx.strokeStyle = "#f84"; break;
+							case sparkPics[1]: ctx.strokeStyle = "#84f"; break;
+							case sparkPics[2]: ctx.strokeStyle = "#8ff"; break;
+							case sparkPics[3]: ctx.strokeStyle = "#fff"; break;
+							case sparkPics[4]: ctx.strokeStyle = "#4f8"; break;
+							case sparkPics[5]: ctx.strokeStyle = "#f44"; break;
+							case sparkPics[6]: ctx.strokeStyle = "#f84"; break;
+							case sparkPics[7]: ctx.strokeStyle = "#84f"; break;
+							case sparkPics[8]: ctx.strokeStyle = "#fff"; break;
+							case sparkPics[9]: ctx.strokeStyle = "#44f"; break;
+						}
 						for (j = sparks[i].trail.length - 1; j >= 0; --j) {
 							point2 = rasterizePoint(sparks[i].trail[j].x, sparks[i].trail[j].y, sparks[i].trail[j].z);
 							if (point2.d != -1) {
-								ctx.globalAlpha = Math.pow(j / sparks[i].trail.length, 1.35) * sparks[i].alpha * .55;
+								ctx.globalAlpha = j / sparks[i].trail.length * sparks[i].alpha / 2;
 								ctx.beginPath();
 								ctx.moveTo(point1.x, point1.y);
-								ctx.lineWidth = Math.min(3.2, .9 + sparks[i].radius * 6 / (sparks[i].trail.length - j) / (1 + point2.d));
+								ctx.lineWidth = 1 + sparks[i].radius * 10 / (sparks[i].trail.length - j) / (1 + point2.d);
 								ctx.lineTo(point2.x, point2.y);
 								ctx.stroke();
 								point1.x = point2.x;
@@ -946,27 +294,13 @@
 						}
 					}
 					ctx.globalAlpha = sparks[i].alpha;
-					ctx.fillStyle = sparks[i].color;
-					ctx.shadowBlur = isMobileCanvas ? 0 : 4;
-					ctx.shadowColor = sparks[i].color;
-					ctx.beginPath();
-					ctx.arc(point.x, point.y, size / 2, 0, pi * 2);
-					ctx.fill();
-					ctx.shadowBlur = 0;
+					ctx.drawImage(sparks[i].img, point.x - size / 2, point.y - size / 2, size, size);
 				}
 			}
 		}
-		function frame(timestamp) {
-			requestAnimationFrame(frame);
-			if (document.body.classList.contains("story-portrait")) {
-				ctx.clearRect(0, 0, cx * 2, cy * 2);
-				return;
-			}
-			var activeFrameInterval = document.body.classList.contains("story-finished")
-				? (isMobileCanvas ? 1000 / 24 : 1000 / 30)
-				: frameInterval;
-			if (activeFrameInterval && timestamp - lastFrameTime < activeFrameInterval) return;
-			lastFrameTime = timestamp;
+
+		function frame() {
+
 			if (frames > 100000) {
 				seedTimer = 0;
 				frames = 0;
@@ -974,110 +308,21 @@
 			frames++;
 			draw();
 			doLogic();
+			requestAnimationFrame(frame);
 		}
+
 		window.addEventListener("resize", () => {
 			canvas.width = canvas.clientWidth;
 			canvas.height = canvas.clientHeight;
 			cx = canvas.width / 2;
 			cy = canvas.height / 2;
-			scale = Math.min(600, Math.max(330, canvas.width * .72));
-			seedInterval = canvas.width < 600 ? 24 : 17;
-			isMobileCanvas = canvas.width < 600;
-			gridXStep = isMobileCanvas ? 6 : 3;
-			gridZStep = isMobileCanvas ? 7 : 4;
-			frameInterval = isMobileCanvas ? 1000 / 30 : 1000 / 45;
 		});
+
 		initVars();
-		requestAnimationFrame(frame);
+		frame();
 	</script>
-	<script>
-		(function () {
-			var startScreen = document.getElementById('start-screen');
-			var startButton = document.getElementById('start-button');
-			var musicButton = document.getElementById('music-button');
-			var bgm = document.getElementById('bgm');
-			var finalScene = document.getElementById('final-scene');
-			var warmParticles = document.getElementById('warm-particles');
-			var petalLayer = document.getElementById('petal-layer');
-			var started = false;
-			bgm.volume = .42;
-			function updateMusicButton() {
-				var playing = !bgm.paused;
-				musicButton.classList.toggle('is-playing', playing);
-				musicButton.textContent = playing ? '♪' : '♫';
-				musicButton.setAttribute('aria-label', playing ? '暂停背景音乐' : '播放背景音乐');
-			}
-			function addAmbientParticles(container, className, count, sizeMin, sizeMax) {
-				var fragment = document.createDocumentFragment();
-				for (var i = 0; i < count; i++) {
-					var particle = document.createElement('i');
-					var size = sizeMin + Math.random() * (sizeMax - sizeMin);
-					particle.className = className;
-					particle.style.setProperty('--x', (4 + Math.random() * 92) + '%');
-					particle.style.setProperty('--size', size.toFixed(1) + 'px');
-					particle.style.setProperty('--duration', (7 + Math.random() * 7).toFixed(1) + 's');
-					particle.style.setProperty('--delay', (-Math.random() * 12).toFixed(1) + 's');
-					particle.style.setProperty('--drift', (-55 + Math.random() * 110).toFixed(0) + 'px');
-					fragment.appendChild(particle);
-				}
-				container.appendChild(fragment);
-			}
-			function revealFinalScene() {
-				var mobile = window.matchMedia('(max-width: 600px)').matches;
-				var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-				var shapeCanvas = document.querySelector('.canvas');
-				document.body.classList.remove('story-portrait');
-				document.body.classList.remove('story-cake');
-				window.finalSceneStartedAt = Date.now();
-				if (!warmParticles.children.length) {
-					addAmbientParticles(warmParticles, 'warm-particle', reducedMotion ? 3 : (mobile ? 7 : 12), 3, 7);
-					addAmbientParticles(petalLayer, 'falling-petal', reducedMotion ? 2 : (mobile ? 4 : 7), 7, 13);
-				}
-				if (shapeCanvas) shapeCanvas.classList.add('final-mode');
-				document.body.classList.remove('story-playing');
-				document.body.classList.add('story-finished');
-				finalScene.classList.add('is-visible');
-				finalScene.setAttribute('aria-hidden', 'false');
-				if (window.startFlowerParticles) window.startFlowerParticles();
-			}
-			startButton.addEventListener('click', function () {
-				if (started) return;
-				started = true;
-				startButton.disabled = true;
-				startButton.textContent = '正在拆开…';
-				startScreen.classList.add('is-opening');
-				bgm.muted = true;
-				bgm.play().then(updateMusicButton).catch(updateMusicButton);
-				window.setTimeout(function () {
-					window.birthdayStarted = true;
-					window.storySkyStartedAt = Date.now();
-					document.body.classList.add('story-playing');
-					startScreen.classList.add('is-hidden');
-					window.dispatchEvent(new Event('birthday:start'));
-					window.setTimeout(function () { startScreen.hidden = true; }, 760);
-				}, 720);
-			});
-			musicButton.addEventListener('click', function () {
-				if (bgm.paused) {
-					bgm.play().then(updateMusicButton).catch(updateMusicButton);
-				} else {
-					bgm.pause();
-					updateMusicButton();
-				}
-			});
-			bgm.addEventListener('play', updateMusicButton);
-			bgm.addEventListener('pause', updateMusicButton);
-			window.addEventListener('birthday:music', function () {
-				try { bgm.currentTime = 0; } catch (e) {}
-				bgm.muted = false;
-				musicButton.classList.add('is-visible');
-				bgm.play().then(updateMusicButton).catch(updateMusicButton);
-			}, { once: true });
-			window.addEventListener('birthday:final', revealFinalScene, { once: true });
-		}());
-	</script>
-	<script src="js/flower-particles.js"></script>
-	<script src="js/butterfly-particles.js"></script>
 	<script src="js/index.js"></script>
+
 </body>
+
 </html>
