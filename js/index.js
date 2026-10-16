@@ -108,12 +108,7 @@ S.UI = (function () {
       maxShapeSize = 45,
       firstAction = true,
       sequence = [],
-      cmd = '#',
-      mobileReadableText = document.getElementById('mobile-readable-text');
-  function setMobileReadableText(value) {
-    if (!mobileReadableText) return;
-    mobileReadableText.textContent = value == null ? '' : String(value);
-  }
+      cmd = '#';
   function formatTime(date) {
     var h = date.getHours(),
         m = date.getMinutes();
@@ -133,8 +128,6 @@ S.UI = (function () {
     time = null;
     document.body.classList.remove('text-focus');
     document.body.classList.remove('text-vertical');
-    window.mobileTextVertical = false;
-    setMobileReadableText('');
     destroy && S.Shape.switchShape(S.ShapeBuilder.letter(''));
   }
   function setTextFocus(enabled) {
@@ -148,7 +141,6 @@ S.UI = (function () {
     sequence = (typeof(value) === 'object' ? value : value.split('|')).filter(function (item) {
       return item !== '';
     });
-    window.mobileTextVertical = false;
 
     function next() {
       var current = sequence.shift(),
@@ -173,7 +165,6 @@ S.UI = (function () {
               return;
             }
             S.Shape.switchShape(S.ShapeBuilder.letter(count, 5), true, true);
-            setMobileReadableText(count);
             count--;
             interval = setTimeout(countdown, 1000);
           }
@@ -181,14 +172,12 @@ S.UI = (function () {
           return;
         case 'rectangle':
           setTextFocus(false);
-          setMobileReadableText('');
           actionValue = actionValue && actionValue.split('x');
           actionValue = (actionValue && actionValue.length === 2) ? actionValue : [maxShapeSize, maxShapeSize / 2];
           S.Shape.switchShape(S.ShapeBuilder.rectangle(Math.min(maxShapeSize, parseInt(actionValue[0], 10)), Math.min(maxShapeSize, parseInt(actionValue[1], 10))));
           break;
         case 'circle':
           setTextFocus(false);
-          setMobileReadableText('');
           actionValue = parseInt(actionValue, 10) || maxShapeSize;
           actionValue = Math.min(actionValue, maxShapeSize);
           S.Shape.switchShape(S.ShapeBuilder.circle(actionValue));
@@ -198,18 +187,15 @@ S.UI = (function () {
           var t = formatTime(new Date());
           time = t;
           S.Shape.switchShape(S.ShapeBuilder.letter(time));
-          setMobileReadableText(time);
           break;
         case 'cake':
           setTextFocus(false);
-          setMobileReadableText('');
           document.body.classList.remove('story-portrait');
           document.body.classList.add('story-cake');
           S.Shape.switchShape(S.ShapeBuilder.cake(), true);
           break;
         case 'portrait':
           setTextFocus(false);
-          setMobileReadableText('');
           document.body.classList.remove('story-cake');
           document.body.classList.add('story-portrait');
           S.Shape.switchShape(S.ShapeBuilder.portrait(), true);
@@ -218,19 +204,7 @@ S.UI = (function () {
           setTextFocus(true);
           document.body.classList.remove('story-portrait');
           document.body.classList.remove('story-cake');
-          var displayText = current[0] === cmd ? 'What?' : current,
-              displayLength = Array.from(String(displayText)).length,
-              displayIsNumber = !isNaN(parseFloat(displayText)) && isFinite(displayText);
-          // 手机端：窄屏下五字句也参与横竖交替，避免部分短句横排时被粒子切碎；
-          // 稍宽的手机仍让五字句保持横排，六字及以上再切竖排。
-          var mobileVerticalLength = window.innerWidth <= 430 ? 5 : 6;
-          if (window.innerWidth < 600 && !displayIsNumber && displayLength >= mobileVerticalLength) {
-            window.mobileTextVertical = !window.mobileTextVertical;
-          } else {
-            window.mobileTextVertical = false;
-          }
-          S.Shape.switchShape(S.ShapeBuilder.letter(displayText), false, window.innerWidth < 600);
-          setMobileReadableText(displayText);
+          S.Shape.switchShape(S.ShapeBuilder.letter(current[0] === cmd ? 'What?' : current), false, window.innerWidth < 600);
           if (!window.birthdayMusicStarted && current.indexOf('小楠老师') !== -1) {
             window.birthdayMusicStarted = true;
             window.dispatchEvent(new Event('birthday:music'));
@@ -689,7 +663,7 @@ S.ShapeBuilder = (function () {
     },
     letter: function (l, sampleGap) {
       var mobileChars = Array.from(String(l)),
-          mobileVertical = window.innerWidth < 600 && !isNumber(l) && mobileChars.length >= (window.innerWidth <= 430 ? 5 : 6) && window.mobileTextVertical === true;
+          mobileVertical = window.innerWidth < 600 && !isNumber(l) && mobileChars.length >= 6;
       if (mobileVertical) document.body.classList.add('text-vertical');
       else document.body.classList.remove('text-vertical');
       var s = 0;
