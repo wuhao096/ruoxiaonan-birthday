@@ -11,7 +11,7 @@ var S = {
   init: function () {
     var action = window.location.href,
         i = action.indexOf('?a='),
-        defaultAction = '|#countdown 3|盲盒拆开成功|今日份快乐加载中|先确认一下|小楠老师今天|不用太懂事|烦恼先放门外|好运排队入场|快乐多来几份|奶茶蛋糕都算|收到很多祝福的话|就请大方照单全收|新的一岁|所得皆所期|所失皆无碍|所求皆如愿|所行皆坦途|岁岁常欢愉|年年皆胜意|平安常相伴|万事皆顺意|小楠老师|生日快乐|#portrait|#cake|';
+        defaultAction = '|#countdown 3|盲盒拆开成功|今日份快乐加载中|先确认一下|小楠老师今天|不用太懂事|烦恼先放假|好运排队来|快乐多几份|奶茶蛋糕管够|祝福请查收|开心请签收|新的一岁|所得皆所期|所失皆无碍|所求皆如愿|所行皆坦途|岁岁常欢愉|年年皆胜意|平安常相伴|万事皆顺意|小楠老师|生日快乐|#portrait|#cake|';
     S.Drawing.init('.canvas');
     document.body.classList.add('body--ready');
 
