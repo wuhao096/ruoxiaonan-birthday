@@ -288,52 +288,6 @@
 			animation: warmBreathe 5.5s ease-in-out infinite;
 		}
 
-		.meteor-shower-layer {
-			position: absolute;
-			inset: 0;
-			z-index: 1;
-			overflow: hidden;
-			pointer-events: none;
-			opacity: 0;
-			transition: opacity .25s ease;
-		}
-
-		body.meteor-shower-active .meteor-shower-layer { opacity: 1; }
-
-		.meteor-streak {
-			position: absolute;
-			left: var(--meteor-x);
-			top: var(--meteor-y);
-			width: 3px;
-			height: var(--meteor-length);
-			border-radius: 999px;
-			background: linear-gradient(180deg, rgba(255, 255, 245, 1), rgba(255, 225, 165, .78) 28%, rgba(255, 174, 215, .18) 72%, transparent);
-			box-shadow: 0 0 7px rgba(255, 244, 206, .9), 0 0 16px rgba(255, 187, 216, .42);
-			transform-origin: 50% 0;
-			transform: rotate(var(--meteor-angle));
-			animation: meteorRain var(--meteor-duration) var(--meteor-delay) cubic-bezier(.2, .7, .25, 1) both;
-		}
-
-		.meteor-streak::after {
-			content: "";
-			position: absolute;
-			left: 50%;
-			top: -3px;
-			width: 8px;
-			height: 8px;
-			border-radius: 50%;
-			background: #fffbe9;
-			box-shadow: 0 0 8px 3px rgba(255, 238, 186, .9);
-			transform: translateX(-50%);
-		}
-
-		@keyframes meteorRain {
-			0% { opacity: 0; transform: rotate(var(--meteor-angle)) translate3d(0, 0, 0) scaleY(.3); }
-			10% { opacity: .98; }
-			58% { opacity: .88; }
-			100% { opacity: 0; transform: rotate(var(--meteor-angle)) translate3d(var(--meteor-dx), var(--meteor-dy), 0) scaleY(1); }
-		}
-
 		.final-scene.is-visible {
 			opacity: 1;
 			visibility: visible;
@@ -615,7 +569,6 @@
 		<source src="./HappyBirthday.mp3" type="audio/mpeg">
 	</audio>
 	<section id="final-scene" class="final-scene" aria-hidden="true">
-		<div id="meteor-shower-layer" class="meteor-shower-layer" aria-hidden="true"></div>
 		<div id="warm-particles" class="warm-particles" aria-hidden="true"></div>
 		<div id="petal-layer" class="petal-layer" aria-hidden="true"></div>
 		<div class="final-content">
@@ -844,18 +797,26 @@
 		}
 
 		function spawnMeteor(shower) {
-			var startX = canvas.width * (shower ? (.22 + Math.random() * .76) : (.58 + Math.random() * .38));
+			var angle = (34 + Math.random() * 24) * pi / 180,
+				speed = shower ? (5.2 + Math.random() * 2.2) : (3.2 + Math.random() * 2.4),
+				startX = canvas.width * (shower ? (.18 + Math.random() * .88) : (.58 + Math.random() * .38));
 			meteors.push({
 				x: startX,
 				y: canvas.height * (shower ? (.02 + Math.random() * .36) : (.04 + Math.random() * .28)),
-				vx: -(shower ? (3.6 + Math.random() * 2.7) : (3.2 + Math.random() * 2.4)),
-				vy: shower ? (2.8 + Math.random() * 2.1) : (2.4 + Math.random() * 1.8),
+				vx: -Math.cos(angle) * speed,
+				vy: Math.sin(angle) * speed,
 				life: 0,
-				maxLife: shower ? 46 + Math.random() * 24 : 42 + Math.random() * 22,
+				maxLife: shower ? 30 + Math.random() * 22 : 42 + Math.random() * 22,
 				color: Math.random() > .5 ? "#ffe7a6" : "#c6e8ff",
-				trail: []
+				trail: [],
+				shower: shower
 			});
 		}
+
+		window.triggerMeteorShower = function () {
+			meteorTimer = 0;
+			meteors.length = 0;
+		};
 
 		function doLogic() {
 			var finalStage = document.body.classList.contains("story-finished"),
@@ -872,17 +833,17 @@
 			sunOpacity += (targetSunOpacity - sunOpacity) * .035;
 			moonOpacity += (targetMoonOpacity - moonOpacity) * .035;
 			var meteorShower = finalStage && Date.now() < (window.finalMeteorBurstUntil || 0),
-				meteorLimit = meteorShower ? (isMobileCanvas ? 6 : 10) : (isMobileCanvas ? 2 : 3);
+				meteorLimit = meteorShower ? (isMobileCanvas ? 3 : 5) : (isMobileCanvas ? 2 : 3);
 			meteorTimer--;
 			if (meteorTimer <= 0 && meteors.length < meteorLimit) {
 				spawnMeteor(meteorShower);
 				meteorTimer = meteorShower
-					? (isMobileCanvas ? 8 + Math.random() * 9 : 6 + Math.random() * 9)
+					? (isMobileCanvas ? 28 + Math.random() * 20 : 20 + Math.random() * 18)
 					: (isMobileCanvas ? 70 + Math.random() * 45 : 48 + Math.random() * 34);
 			}
 			for (i = meteors.length - 1; i >= 0; --i) {
 				meteors[i].trail.push({ x: meteors[i].x, y: meteors[i].y });
-				if (meteors[i].trail.length > 7) meteors[i].trail.shift();
+				if (meteors[i].trail.length > (meteors[i].shower ? 10 : 7)) meteors[i].trail.shift();
 				meteors[i].x += meteors[i].vx;
 				meteors[i].y += meteors[i].vy;
 				meteors[i].life++;
@@ -1029,25 +990,30 @@
 				ctx.restore();
 			}
 
-			// 流星只保留很少几颗，尾巴短而亮，避免遮挡文字。
+			// 流星采用亮点加渐隐尾巴，少量错峰出现，避免像固定斜线装饰。
 			for (i = 0; i < meteors.length; i++) {
 				var meteor = meteors[i];
 				ctx.strokeStyle = meteor.color;
 				ctx.lineCap = "round";
-				ctx.lineWidth = isMobileCanvas ? 1.4 : 1.8;
-				ctx.globalAlpha = .16;
-				ctx.beginPath();
-				for (j = meteor.trail.length - 1; j >= 0; j--) {
-					var trailPoint = meteor.trail[j];
-					if (j === meteor.trail.length - 1) ctx.moveTo(trailPoint.x, trailPoint.y);
-					else ctx.lineTo(trailPoint.x, trailPoint.y);
+				for (j = 1; j < meteor.trail.length; j++) {
+					var trailStart = meteor.trail[j - 1],
+						trailEnd = meteor.trail[j],
+						trailAlpha = (j / meteor.trail.length) * (meteor.shower ? .62 : .42);
+					ctx.globalAlpha = trailAlpha;
+					ctx.lineWidth = (isMobileCanvas ? 1.05 : 1.45) * (0.55 + j / meteor.trail.length);
+					ctx.beginPath();
+					ctx.moveTo(trailStart.x, trailStart.y);
+					ctx.lineTo(trailEnd.x, trailEnd.y);
+					ctx.stroke();
 				}
-				ctx.stroke();
-				ctx.globalAlpha = .9;
+				ctx.globalAlpha = .95;
+				ctx.shadowBlur = isMobileCanvas ? 5 : 8;
+				ctx.shadowColor = meteor.color;
 				ctx.fillStyle = meteor.color;
 				ctx.beginPath();
-				ctx.arc(meteor.x, meteor.y, isMobileCanvas ? 1.8 : 2.4, 0, pi * 2);
+				ctx.arc(meteor.x, meteor.y, isMobileCanvas ? 2.05 : 2.65, 0, pi * 2);
 				ctx.fill();
+				ctx.shadowBlur = 0;
 			}
 			ctx.globalAlpha = 1;
 
@@ -1160,7 +1126,6 @@
 			var musicButton = document.getElementById('music-button');
 			var bgm = document.getElementById('bgm');
 			var finalScene = document.getElementById('final-scene');
-			var meteorShowerLayer = document.getElementById('meteor-shower-layer');
 			var warmParticles = document.getElementById('warm-particles');
 			var petalLayer = document.getElementById('petal-layer');
 			var started = false;
@@ -1210,31 +1175,10 @@
 				if (window.startFlowerParticles) window.startFlowerParticles();
 			}
 
-			function launchMeteorVisual() {
-				if (!meteorShowerLayer) return;
-				meteorShowerLayer.textContent = '';
-				var mobile = window.matchMedia('(max-width: 600px)').matches,
-					count = mobile ? 7 : 11;
-				for (var meteorIndex = 0; meteorIndex < count; meteorIndex++) {
-					var streak = document.createElement('i');
-					streak.className = 'meteor-streak';
-					streak.style.setProperty('--meteor-x', (12 + Math.random() * 88).toFixed(1) + '%');
-					streak.style.setProperty('--meteor-y', (3 + Math.random() * 58).toFixed(1) + '%');
-					streak.style.setProperty('--meteor-length', (44 + Math.random() * (mobile ? 48 : 72)).toFixed(0) + 'px');
-					streak.style.setProperty('--meteor-angle', (-32 - Math.random() * 28).toFixed(1) + 'deg');
-					streak.style.setProperty('--meteor-dx', (-24 - Math.random() * 34).toFixed(0) + 'vw');
-					streak.style.setProperty('--meteor-dy', (28 + Math.random() * 34).toFixed(0) + 'vh');
-					streak.style.setProperty('--meteor-duration', (1.55 + Math.random() * (mobile ? 1.25 : 1.65)).toFixed(2) + 's');
-					streak.style.setProperty('--meteor-delay', (Math.random() * 4.6).toFixed(2) + 's');
-					meteorShowerLayer.appendChild(streak);
-				}
-			}
-
 			finalScene.addEventListener('click', function () {
 				if (!document.body.classList.contains('story-finished')) return;
 				window.finalMeteorBurstUntil = Date.now() + 9000;
-				window.meteorTimer = 0;
-				launchMeteorVisual();
+				if (window.triggerMeteorShower) window.triggerMeteorShower();
 				document.body.classList.add('meteor-shower-active');
 				window.setTimeout(function () {
 					if (Date.now() >= (window.finalMeteorBurstUntil || 0)) document.body.classList.remove('meteor-shower-active');
