@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 
 <head>
 	<meta charset="utf-8">
-	<title>不管几岁，快乐万岁</title>
+	<title>小楠老师，生日快乐</title>
 	<meta name="language" content="zh-CN">
     <!-- 新增手机适配viewport -->
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -288,9 +288,42 @@
 			animation: warmBreathe 5.5s ease-in-out infinite;
 		}
 
+		.meteor-shower-layer {
+			position: absolute;
+			inset: 0;
+			z-index: 1;
+			overflow: hidden;
+			pointer-events: none;
+			opacity: 0;
+			transition: opacity .25s ease;
+		}
+
+		body.meteor-shower-active .meteor-shower-layer { opacity: 1; }
+
+		.meteor-streak {
+			position: absolute;
+			left: var(--meteor-x);
+			top: var(--meteor-y);
+			width: 2px;
+			height: var(--meteor-length);
+			border-radius: 999px;
+			background: linear-gradient(180deg, rgba(255, 250, 224, .98), rgba(255, 205, 150, .55), transparent);
+			box-shadow: 0 0 8px rgba(255, 224, 169, .75);
+			transform-origin: 50% 0;
+			transform: rotate(-45deg);
+			animation: meteorRain var(--meteor-duration) var(--meteor-delay) ease-out both;
+		}
+
+		@keyframes meteorRain {
+			0% { opacity: 0; transform: rotate(-45deg) translate3d(0, 0, 0) scaleY(.45); }
+			12% { opacity: .95; }
+			100% { opacity: 0; transform: rotate(-45deg) translate3d(-42vw, 48vh, 0) scaleY(1); }
+		}
+
 		.final-scene.is-visible {
 			opacity: 1;
 			visibility: visible;
+			pointer-events: auto;
 		}
 
 		.final-content {
@@ -333,6 +366,14 @@
 			font-family: "STKaiti", "KaiTi", serif;
 			font-size: clamp(18px, 4vw, 24px);
 			letter-spacing: .12em;
+		}
+
+		.meteor-hint {
+			margin: 8px 0 0;
+			color: rgba(255, 224, 235, .58);
+			font-size: 11px;
+			letter-spacing: .08em;
+			animation: warmBreathe 3s ease-in-out infinite;
 		}
 
 		.final-message {
@@ -485,8 +526,17 @@
 
 		@media (max-width: 600px) {
 			/* 手机端让文字粒子成为主视觉，压低背景网格和烟花的干扰。 */
-			body.story-playing #canvas { opacity: .28; }
+			body.story-playing #canvas { opacity: .62; }
+			body.story-playing.text-focus #canvas { opacity: .38; }
+			/* 竖排文字时进一步压低背景粒子，避免密集粒子穿过字形。 */
+			body.story-playing.text-focus.text-vertical #canvas { opacity: .24; }
 			body.story-finished #canvas { opacity: .46; }
+			body.meteor-shower-active .final-scene {
+				background:
+					radial-gradient(circle at 50% 68%, rgba(154, 61, 107, .12), transparent 39%),
+					linear-gradient(180deg, rgba(5, 2, 8, .06), rgba(5, 1, 7, .28));
+			}
+			body.meteor-shower-active #canvas { opacity: .72; }
 			body.text-focus::after {
 				content: "";
 				position: fixed;
@@ -550,6 +600,7 @@
 		<source src="./HappyBirthday.mp3" type="audio/mpeg">
 	</audio>
 	<section id="final-scene" class="final-scene" aria-hidden="true">
+		<div id="meteor-shower-layer" class="meteor-shower-layer" aria-hidden="true"></div>
 		<div id="warm-particles" class="warm-particles" aria-hidden="true"></div>
 		<div id="petal-layer" class="petal-layer" aria-hidden="true"></div>
 		<div class="final-content">
@@ -617,6 +668,7 @@
 				<h2 class="final-title">愿你永远被温柔与美好环绕</h2>
 				<p class="final-copy">愿往后的每一天，都有鲜花、阳光和好心情。<br>也愿我们在慢慢了解彼此的路上，<br class="mobile-break">遇见更多值得期待的风景。<br>愿你被世界温柔以待，也被自己的光照亮。</p>
 				<p class="final-signature">小楠老师，生日快乐</p>
+				<p class="meteor-hint">轻点花束，让流星替你许个愿</p>
 			</div>
 		</div>
 	</section>
@@ -776,15 +828,15 @@
 			}
 		}
 
-		function spawnMeteor() {
-			var startX = canvas.width * (.58 + Math.random() * .38);
+		function spawnMeteor(shower) {
+			var startX = canvas.width * (shower ? (.22 + Math.random() * .76) : (.58 + Math.random() * .38));
 			meteors.push({
 				x: startX,
-				y: canvas.height * (.04 + Math.random() * .28),
-				vx: -(3.2 + Math.random() * 2.4),
-				vy: 2.4 + Math.random() * 1.8,
+				y: canvas.height * (shower ? (.02 + Math.random() * .36) : (.04 + Math.random() * .28)),
+				vx: -(shower ? (3.6 + Math.random() * 2.7) : (3.2 + Math.random() * 2.4)),
+				vy: shower ? (2.8 + Math.random() * 2.1) : (2.4 + Math.random() * 1.8),
 				life: 0,
-				maxLife: 42 + Math.random() * 22,
+				maxLife: shower ? 46 + Math.random() * 24 : 42 + Math.random() * 22,
 				color: Math.random() > .5 ? "#ffe7a6" : "#c6e8ff",
 				trail: []
 			});
@@ -804,10 +856,14 @@
 			}
 			sunOpacity += (targetSunOpacity - sunOpacity) * .035;
 			moonOpacity += (targetMoonOpacity - moonOpacity) * .035;
+			var meteorShower = finalStage && Date.now() < (window.finalMeteorBurstUntil || 0),
+				meteorLimit = meteorShower ? (isMobileCanvas ? 6 : 10) : (isMobileCanvas ? 2 : 3);
 			meteorTimer--;
-			if (meteorTimer <= 0 && meteors.length < (isMobileCanvas ? 2 : 3)) {
-				spawnMeteor();
-				meteorTimer = isMobileCanvas ? 70 + Math.random() * 45 : 48 + Math.random() * 34;
+			if (meteorTimer <= 0 && meteors.length < meteorLimit) {
+				spawnMeteor(meteorShower);
+				meteorTimer = meteorShower
+					? (isMobileCanvas ? 8 + Math.random() * 9 : 6 + Math.random() * 9)
+					: (isMobileCanvas ? 70 + Math.random() * 45 : 48 + Math.random() * 34);
 			}
 			for (i = meteors.length - 1; i >= 0; --i) {
 				meteors[i].trail.push({ x: meteors[i].x, y: meteors[i].y });
@@ -1089,6 +1145,7 @@
 			var musicButton = document.getElementById('music-button');
 			var bgm = document.getElementById('bgm');
 			var finalScene = document.getElementById('final-scene');
+			var meteorShowerLayer = document.getElementById('meteor-shower-layer');
 			var warmParticles = document.getElementById('warm-particles');
 			var petalLayer = document.getElementById('petal-layer');
 			var started = false;
@@ -1137,6 +1194,33 @@
 				finalScene.setAttribute('aria-hidden', 'false');
 				if (window.startFlowerParticles) window.startFlowerParticles();
 			}
+
+			function launchMeteorVisual() {
+				if (!meteorShowerLayer) return;
+				meteorShowerLayer.textContent = '';
+				var count = window.matchMedia('(max-width: 600px)').matches ? 9 : 14;
+				for (var meteorIndex = 0; meteorIndex < count; meteorIndex++) {
+					var streak = document.createElement('i');
+					streak.className = 'meteor-streak';
+					streak.style.setProperty('--meteor-x', (28 + Math.random() * 82).toFixed(1) + '%');
+					streak.style.setProperty('--meteor-y', (-8 + Math.random() * 35).toFixed(1) + '%');
+					streak.style.setProperty('--meteor-length', (52 + Math.random() * 58).toFixed(0) + 'px');
+					streak.style.setProperty('--meteor-duration', (2.6 + Math.random() * 1.8).toFixed(2) + 's');
+					streak.style.setProperty('--meteor-delay', (Math.random() * 1.8).toFixed(2) + 's');
+					meteorShowerLayer.appendChild(streak);
+				}
+			}
+
+			finalScene.addEventListener('click', function () {
+				if (!document.body.classList.contains('story-finished')) return;
+				window.finalMeteorBurstUntil = Date.now() + 9000;
+				window.meteorTimer = 0;
+				launchMeteorVisual();
+				document.body.classList.add('meteor-shower-active');
+				window.setTimeout(function () {
+					if (Date.now() >= (window.finalMeteorBurstUntil || 0)) document.body.classList.remove('meteor-shower-active');
+				}, 9300);
+			});
 
 			startButton.addEventListener('click', function () {
 				if (started) return;

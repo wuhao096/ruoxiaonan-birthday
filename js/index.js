@@ -11,7 +11,7 @@ var S = {
   init: function () {
     var action = window.location.href,
         i = action.indexOf('?a='),
-        defaultAction = '|#countdown 3|盲盒拆开成功|今日份快乐加载中|先确认一下|小楠老师今天|不用太懂事|烦恼先放假|好运排队来|快乐多几份|奶茶蛋糕管够|祝福请查收|开心请签收|新的一岁|所得皆所期|所失皆无碍|所求皆如愿|所行皆坦途|岁岁常欢愉|年年皆胜意|平安常相伴|万事皆顺意|小楠老师|生日快乐|#portrait|#cake|';
+        defaultAction = '|#countdown 3|盲盒拆开成功|今日份快乐加载中|先确认一下|小楠老师今天|不用太懂事|烦恼先放门外|好运排队入场|快乐多来几份|奶茶蛋糕都算|收到很多祝福的话|就请大方照单全收|新的一岁|所得皆所期|所失皆无碍|所求皆如愿|所行皆坦途|岁岁常欢愉|年年皆胜意|平安常相伴|万事皆顺意|小楠老师|生日快乐|#portrait|#cake|';
     S.Drawing.init('.canvas');
     document.body.classList.add('body--ready');
 
@@ -128,6 +128,7 @@ S.UI = (function () {
     time = null;
     document.body.classList.remove('text-focus');
     document.body.classList.remove('text-vertical');
+    window.mobileTextVertical = false;
     destroy && S.Shape.switchShape(S.ShapeBuilder.letter(''));
   }
   function setTextFocus(enabled) {
@@ -141,6 +142,7 @@ S.UI = (function () {
     sequence = (typeof(value) === 'object' ? value : value.split('|')).filter(function (item) {
       return item !== '';
     });
+    window.mobileTextVertical = false;
 
     function next() {
       var current = sequence.shift(),
@@ -204,7 +206,18 @@ S.UI = (function () {
           setTextFocus(true);
           document.body.classList.remove('story-portrait');
           document.body.classList.remove('story-cake');
-          S.Shape.switchShape(S.ShapeBuilder.letter(current[0] === cmd ? 'What?' : current), false, window.innerWidth < 600);
+          var displayText = current[0] === cmd ? 'What?' : current,
+              displayLength = Array.from(String(displayText)).length,
+              displayIsNumber = !isNaN(parseFloat(displayText)) && isFinite(displayText);
+          // 手机端：窄屏下五字句也参与横竖交替，避免部分短句横排时被粒子切碎；
+          // 稍宽的手机仍让五字句保持横排，六字及以上再切竖排。
+          var mobileVerticalLength = window.innerWidth <= 430 ? 5 : 6;
+          if (window.innerWidth < 600 && !displayIsNumber && displayLength >= mobileVerticalLength) {
+            window.mobileTextVertical = !window.mobileTextVertical;
+          } else {
+            window.mobileTextVertical = false;
+          }
+          S.Shape.switchShape(S.ShapeBuilder.letter(displayText), false, window.innerWidth < 600);
           if (!window.birthdayMusicStarted && current.indexOf('小楠老师') !== -1) {
             window.birthdayMusicStarted = true;
             window.dispatchEvent(new Event('birthday:music'));
@@ -663,7 +676,7 @@ S.ShapeBuilder = (function () {
     },
     letter: function (l, sampleGap) {
       var mobileChars = Array.from(String(l)),
-          mobileVertical = window.innerWidth < 600 && !isNumber(l) && mobileChars.length >= 6;
+          mobileVertical = window.innerWidth < 600 && !isNumber(l) && mobileChars.length >= (window.innerWidth <= 430 ? 5 : 6) && window.mobileTextVertical === true;
       if (mobileVertical) document.body.classList.add('text-vertical');
       else document.body.classList.remove('text-vertical');
       var s = 0;
