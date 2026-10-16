@@ -12,7 +12,6 @@ var S = {
     var action = window.location.href,
         i = action.indexOf('?a='),
         defaultAction = '|#countdown 3|盲盒拆开成功|专属祝福加载中|先看看|小楠老师今天|放下操劳|慢下来感受|美好如约而至|自在且从容|三餐有暖意|新的一岁|眼里有光|心中安宁|前路轻松|岁岁常欢愉|年年皆胜意|平安常相伴|万事舒心|小楠老师|生日快乐|#portrait|#cake|';
-
     S.Drawing.init('.canvas');
     document.body.classList.add('body--ready');
 
@@ -93,7 +92,7 @@ S.Drawing = (function () {
       context.beginPath();
       var mobileRadius = window.innerWidth < 600;
       context.arc(p.x, p.y, mobileRadius
-        ? Math.max(1.05, Math.min(3.65, p.z * .9))
+        ? Math.max(.72, Math.min(2.45, p.z * .68))
         : Math.max(.82, Math.min(3.2, p.z * .78)), 0, 2 * Math.PI, true);
       context.closePath();
       context.fill();
@@ -129,6 +128,7 @@ S.UI = (function () {
     time = null;
     document.body.classList.remove('text-focus');
     document.body.classList.remove('text-vertical');
+    window.mobileTextVertical = false;
     destroy && S.Shape.switchShape(S.ShapeBuilder.letter(''));
   }
   function setTextFocus(enabled) {
@@ -142,6 +142,7 @@ S.UI = (function () {
     sequence = (typeof(value) === 'object' ? value : value.split('|')).filter(function (item) {
       return item !== '';
     });
+    window.mobileTextVertical = false;
 
     function next() {
       var current = sequence.shift(),
@@ -205,7 +206,18 @@ S.UI = (function () {
           setTextFocus(true);
           document.body.classList.remove('story-portrait');
           document.body.classList.remove('story-cake');
-          S.Shape.switchShape(S.ShapeBuilder.letter(current[0] === cmd ? 'What?' : current), false, window.innerWidth < 600);
+          var displayText = current[0] === cmd ? 'What?' : current,
+              displayLength = Array.from(String(displayText)).length,
+              displayIsNumber = !isNaN(parseFloat(displayText)) && isFinite(displayText);
+          // 手机端：窄屏下五字句也参与横竖交替，避免部分短句横排时被粒子切碎；
+          // 稍宽的手机仍让五字句保持横排，六字及以上再切竖排。
+          var mobileVerticalLength = window.innerWidth <= 430 ? 5 : 6;
+          if (window.innerWidth < 600 && !displayIsNumber && displayLength >= mobileVerticalLength) {
+            window.mobileTextVertical = !window.mobileTextVertical;
+          } else {
+            window.mobileTextVertical = false;
+          }
+          S.Shape.switchShape(S.ShapeBuilder.letter(displayText), false, window.innerWidth < 600);
           if (!window.birthdayMusicStarted && current.indexOf('小楠老师') !== -1) {
             window.birthdayMusicStarted = true;
             window.dispatchEvent(new Event('birthday:music'));
@@ -394,7 +406,7 @@ S.Dot.prototype = {
   }
 }
 S.ShapeBuilder = (function () {
-  var gap = window.innerWidth < 600 ? 6 : 8,
+  var gap = window.innerWidth < 600 ? 4 : 8,
       shapeCanvas = document.createElement('canvas'),
       shapeContext = shapeCanvas.getContext('2d'),
       fontSize = 500,
@@ -664,7 +676,7 @@ S.ShapeBuilder = (function () {
     },
     letter: function (l, sampleGap) {
       var mobileChars = Array.from(String(l)),
-          mobileVertical = window.innerWidth < 600 && !isNumber(l) && mobileChars.length >= 6;
+          mobileVertical = window.innerWidth < 600 && !isNumber(l) && mobileChars.length >= (window.innerWidth <= 430 ? 5 : 6) && window.mobileTextVertical === true;
       if (mobileVertical) document.body.classList.add('text-vertical');
       else document.body.classList.remove('text-vertical');
       var s = 0;
@@ -675,14 +687,14 @@ S.ShapeBuilder = (function () {
       shapeContext.clearRect(0, 0, shapeCanvas.width, shapeCanvas.height);
       if (mobileVertical) {
         // 手机竖屏中，较长中文改为逐字竖排，避免横向挤成一团。
-        var verticalSize = Math.min(112, shapeCanvas.width * .28, shapeCanvas.height / (mobileChars.length * 1.18)),
-            verticalLine = verticalSize * 1.12,
+        var verticalSize = Math.min(122, shapeCanvas.width * .32, shapeCanvas.height / (mobileChars.length * 1.14)),
+            verticalLine = verticalSize * 1.08,
             verticalTop = shapeCanvas.height / 2 - (verticalLine * mobileChars.length) / 2 + verticalLine / 2;
         setFontSize(verticalSize);
         for (var mobileIndex = 0; mobileIndex < mobileChars.length; mobileIndex++) {
           shapeContext.fillText(mobileChars[mobileIndex], shapeCanvas.width / 2, verticalTop + mobileIndex * verticalLine);
         }
-        return processCanvas(sampleGap || Math.max(4, gap - 1));
+        return processCanvas(sampleGap || gap);
       }
       setFontSize(s);
       shapeContext.fillText(l, shapeCanvas.width / 2, shapeCanvas.height / 2);
@@ -931,10 +943,10 @@ S.Shape = (function () {
         dots[d].t.a = .08;
         dots[d].p.a = .12;
         dots[d].p.h = 0;
-        dots[d].e = crisp ? 0.58 : (fast ? 0.32 : (dots[d].s ? 0.22 : 0.18));
+        dots[d].e = crisp ? 0.76 : (fast ? 0.4 : (dots[d].s ? 0.3 : 0.26));
         dots[d].setTargetColor(target.color || (Math.random() > 0.92 ? theme[1] : theme[0]));
-        var detour = Math.min(46, a.w * .11),
-            jitter = (Math.random() - .5) * 18,
+        var detour = crisp ? Math.min(12, a.w * .025) : Math.min(46, a.w * .11),
+            jitter = (Math.random() - .5) * (crisp ? 4 : 18),
             detourX = transitionMode === 0 ? detour : (transitionMode === 1 ? -detour : jitter),
             detourY = transitionMode === 2 ? -detour : (transitionMode === 3 ? detour : jitter);
         if (dots[d].s) {
