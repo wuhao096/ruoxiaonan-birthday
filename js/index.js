@@ -108,7 +108,12 @@ S.UI = (function () {
       maxShapeSize = 45,
       firstAction = true,
       sequence = [],
-      cmd = '#';
+      cmd = '#',
+      mobileReadableText = document.getElementById('mobile-readable-text');
+  function setMobileReadableText(value) {
+    if (!mobileReadableText) return;
+    mobileReadableText.textContent = value == null ? '' : String(value);
+  }
   function formatTime(date) {
     var h = date.getHours(),
         m = date.getMinutes();
@@ -129,6 +134,7 @@ S.UI = (function () {
     document.body.classList.remove('text-focus');
     document.body.classList.remove('text-vertical');
     window.mobileTextVertical = false;
+    setMobileReadableText('');
     destroy && S.Shape.switchShape(S.ShapeBuilder.letter(''));
   }
   function setTextFocus(enabled) {
@@ -167,6 +173,7 @@ S.UI = (function () {
               return;
             }
             S.Shape.switchShape(S.ShapeBuilder.letter(count, 5), true, true);
+            setMobileReadableText(count);
             count--;
             interval = setTimeout(countdown, 1000);
           }
@@ -174,12 +181,14 @@ S.UI = (function () {
           return;
         case 'rectangle':
           setTextFocus(false);
+          setMobileReadableText('');
           actionValue = actionValue && actionValue.split('x');
           actionValue = (actionValue && actionValue.length === 2) ? actionValue : [maxShapeSize, maxShapeSize / 2];
           S.Shape.switchShape(S.ShapeBuilder.rectangle(Math.min(maxShapeSize, parseInt(actionValue[0], 10)), Math.min(maxShapeSize, parseInt(actionValue[1], 10))));
           break;
         case 'circle':
           setTextFocus(false);
+          setMobileReadableText('');
           actionValue = parseInt(actionValue, 10) || maxShapeSize;
           actionValue = Math.min(actionValue, maxShapeSize);
           S.Shape.switchShape(S.ShapeBuilder.circle(actionValue));
@@ -189,15 +198,18 @@ S.UI = (function () {
           var t = formatTime(new Date());
           time = t;
           S.Shape.switchShape(S.ShapeBuilder.letter(time));
+          setMobileReadableText(time);
           break;
         case 'cake':
           setTextFocus(false);
+          setMobileReadableText('');
           document.body.classList.remove('story-portrait');
           document.body.classList.add('story-cake');
           S.Shape.switchShape(S.ShapeBuilder.cake(), true);
           break;
         case 'portrait':
           setTextFocus(false);
+          setMobileReadableText('');
           document.body.classList.remove('story-cake');
           document.body.classList.add('story-portrait');
           S.Shape.switchShape(S.ShapeBuilder.portrait(), true);
@@ -218,6 +230,7 @@ S.UI = (function () {
             window.mobileTextVertical = false;
           }
           S.Shape.switchShape(S.ShapeBuilder.letter(displayText), false, window.innerWidth < 600);
+          setMobileReadableText(displayText);
           if (!window.birthdayMusicStarted && current.indexOf('小楠老师') !== -1) {
             window.birthdayMusicStarted = true;
             window.dispatchEvent(new Event('birthday:music'));
